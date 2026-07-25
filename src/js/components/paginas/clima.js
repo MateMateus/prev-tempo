@@ -29,9 +29,9 @@ function formatarHora(isoString) {
 
 /**
  * Atualiza o mapa interativo Leaflet.js com estilo CartoDB Positron Light,
- * adicionando a demarcação REAL das fronteiras do município em GeoJSON e ajustando o enquadramento (fitBounds).
+ * adicionando a demarcação REAL das fronteiras do município filtrado por cidade, estado e Brasil (GeoJSON único).
  */
-async function atualizarMapaLeaflet(lat, lon, nomeCidade) {
+async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "") {
     const containerMapa = document.getElementById("mapa-clima");
     if (!containerMapa || !window.L) return;
 
@@ -54,9 +54,9 @@ async function atualizarMapaLeaflet(lat, lon, nomeCidade) {
         .bindPopup(`<b>${nomeCidade}</b><br>Coordenadas: ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`)
         .openPopup();
 
-    // Demarcação REAL das fronteiras do município via GeoJSON (Nominatim API)
+    // Demarcação REAL das fronteiras do município único via GeoJSON (Nominatim API filtrada)
     try {
-        const geoJsonData = await buscarGeoJsonMunicipio(nomeCidade);
+        const geoJsonData = await buscarGeoJsonMunicipio(nomeCidade, estado);
         if (geoJsonData && geoJsonData.features && geoJsonData.features.length > 0) {
             const geojsonLayer = window.L.geoJSON(geoJsonData, {
                 style: {
@@ -151,7 +151,7 @@ function renderizarDashboard(indexSelecionado = 0) {
                     </div>
                 </div>
 
-                <!-- MAPA LEAFLET LIGHT COM DEMARCAÇÃO REAL GEOJSON -->
+                <!-- MAPA LEAFLET LIGHT COM DEMARCAÇÃO REAL GEOJSON DO MUNICÍPIO -->
                 <div class="bem-card--white-glass">
                     <h4 class="bem-font-bold bem-mb-sm">📍 Localização & Fronteiras do Município (GeoJSON Real)</h4>
                     <div id="mapa-clima" class="bem-map-container"></div>
@@ -209,7 +209,7 @@ function renderizarDashboard(indexSelecionado = 0) {
         </div>
     `;
 
-    atualizarMapaLeaflet(coords.lat, coords.lon, cidade);
+    atualizarMapaLeaflet(coords.lat, coords.lon, cidade, estado);
 
     const dayCards = containerResultado.querySelectorAll('.bem-day-card');
     dayCards.forEach(card => {
@@ -277,6 +277,7 @@ async function consultarCepEClima() {
         document.getElementById("estado").value = dadosEndereco.estado || "";
 
         const cidade = dadosEndereco.localidade;
+        const estadoSigla = dadosEndereco.uf || "";
         const coords = await buscarCoordenadasPorCidade(cidade);
         
         if (!coords) {
@@ -308,7 +309,7 @@ async function consultarCepEClima() {
 
         dadosClimaAtuais = {
             cidade,
-            estado: dadosEndereco.uf || coords.estado,
+            estado: estadoSigla || coords.estado,
             coords,
             climaData
         };

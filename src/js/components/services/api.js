@@ -87,18 +87,28 @@ export async function buscarCoordenadasPorCidade(cidade) {
 }
 
 /**
- * Consulta a API do Nominatim (OpenStreetMap) para obter o polígono de fronteira GeoJSON real do município.
+ * Consulta a API do Nominatim (OpenStreetMap) para obter o polígono de fronteira GeoJSON real do município,
+ * restringindo a busca pela cidade, estado e país (Brasil) e selecionando apenas o primeiro resultado exato.
  * 
  * @param {string} cidade - Nome do município a ser consultado
- * @returns {Promise<object|null>} Objeto GeoJSON dos limites municipais
+ * @param {string} estado - Nome ou sigla do estado
+ * @returns {Promise<object|null>} Objeto GeoJSON único do município oficial
  */
-export async function buscarGeoJsonMunicipio(cidade) {
+export async function buscarGeoJsonMunicipio(cidade, estado = "") {
     try {
-        const url = `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cidade)}&polygon_geojson=1&format=geojson`;
+        const url = `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cidade)}&state=${encodeURIComponent(estado)}&country=Brazil&polygon_geojson=1&format=geojson`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("Falha ao buscar limites GeoJSON do município");
         const data = await res.json();
-        return data;
+        
+        if (data && data.features && data.features.length > 0) {
+            // Retorna estritamente a primeira feature encontrada (município oficial)
+            return {
+                type: "FeatureCollection",
+                features: [data.features[0]]
+            };
+        }
+        return null;
     } catch (error) {
         console.error("Erro ao buscar GeoJSON do município:", error);
         return null;
