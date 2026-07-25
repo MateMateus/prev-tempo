@@ -1,38 +1,38 @@
 /**
  * Converte os códigos numéricos da OMM (Organização Meteorológica Mundial - WMO)
- * em uma descrição textual em português e um emoji ilustrativo.
+ * em uma descrição textual em português e uma URL de ícone 3D em alta definição (Microsoft Fluent Emoji 3D).
  * 
  * @param {number} code - Código meteorológico retornado pela Open-Meteo
- * @returns {object} Objeto contendo a descrição e o emoji do clima
+ * @returns {object} Objeto contendo a descrição e a URL do ícone 3D
  */
 export function traduzirCodigoTempo(code) {
-    // Dicionário de tradução dos códigos OMM/WMO
+    const cdnBase = 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets';
+
     const mapaClima = {
-        0: { descricao: 'Céu Limpo', icone: '☀️' },
-        1: { descricao: 'Predominantemente Ensolarado', icone: '🌤️' },
-        2: { descricao: 'Parcialmente Nublado', icone: '⛅' },
-        3: { descricao: 'Encoberto / Nublado', icone: '☁️' },
-        45: { descricao: 'Nevoeiro', icone: '🌫️' },
-        48: { descricao: 'Nevoeiro com Geada', icone: '🌫️' },
-        51: { descricao: 'Garoa Leve', icone: '🌧️' },
-        53: { descricao: 'Garoa Moderada', icone: '🌧️' },
-        55: { descricao: 'Garoa Densa', icone: '🌧️' },
-        61: { descricao: 'Chuva Leve', icone: '🌧️' },
-        63: { descricao: 'Chuva Moderada', icone: '🌧️' },
-        65: { descricao: 'Chuva Forte', icone: '🌧️' },
-        71: { descricao: 'Neve Leve', icone: '❄️' },
-        73: { descricao: 'Neve Moderada', icone: '❄️' },
-        75: { descricao: 'Neve Forte', icone: '❄️' },
-        80: { descricao: 'Pancadas de Chuva Leves', icone: '🌦️' },
-        81: { descricao: 'Pancadas de Chuva Moderadas', icone: '🌦️' },
-        82: { descricao: 'Pancadas de Chuva Violentas', icone: '⛈️' },
-        95: { descricao: 'Tempestade', icone: '⛈️' },
-        96: { descricao: 'Tempestade com Granizo Leve', icone: '⛈️' },
-        99: { descricao: 'Tempestade com Granizo Forte', icone: '⛈️' }
+        0: { descricao: 'Céu Limpo', icone: `${cdnBase}/Sun/3D/sun_3d.png` },
+        1: { descricao: 'Predominantemente Ensolarado', icone: `${cdnBase}/Sun%20behind%20small%20cloud/3D/sun_behind_small_cloud_3d.png` },
+        2: { descricao: 'Parcialmente Nublado', icone: `${cdnBase}/Sun%20behind%20cloud/3D/sun_behind_cloud_3d.png` },
+        3: { descricao: 'Encoberto / Nublado', icone: `${cdnBase}/Cloud/3D/cloud_3d.png` },
+        45: { descricao: 'Nevoeiro', icone: `${cdnBase}/Fog/3D/fog_3d.png` },
+        48: { descricao: 'Nevoeiro com Geada', icone: `${cdnBase}/Fog/3D/fog_3d.png` },
+        51: { descricao: 'Garoa Leve', icone: `${cdnBase}/Cloud%20with%20drizzle/3D/cloud_with_drizzle_3d.png` },
+        53: { descricao: 'Garoa Moderada', icone: `${cdnBase}/Cloud%20with%20drizzle/3D/cloud_with_drizzle_3d.png` },
+        55: { descricao: 'Garoa Densa', icone: `${cdnBase}/Cloud%20with%20drizzle/3D/cloud_with_drizzle_3d.png` },
+        61: { descricao: 'Chuva Leve', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
+        63: { descricao: 'Chuva Moderada', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
+        65: { descricao: 'Chuva Forte', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
+        71: { descricao: 'Neve Leve', icone: `${cdnBase}/Snowflake/3D/snowflake_3d.png` },
+        73: { descricao: 'Neve Moderada', icone: `${cdnBase}/Snowflake/3D/snowflake_3d.png` },
+        75: { descricao: 'Neve Forte', icone: `${cdnBase}/Snowflake/3D/snowflake_3d.png` },
+        80: { descricao: 'Pancadas de Chuva Leves', icone: `${cdnBase}/Sun%20behind%20rain%20cloud/3D/sun_behind_rain_cloud_3d.png` },
+        81: { descricao: 'Pancadas de Chuva Moderadas', icone: `${cdnBase}/Sun%20behind%20rain%20cloud/3D/sun_behind_rain_cloud_3d.png` },
+        82: { descricao: 'Pancadas de Chuva Violentas', icone: `${cdnBase}/Cloud%20with%20lightning%20and%20rain/3D/cloud_with_lightning_and_rain_3d.png` },
+        95: { descricao: 'Tempestade', icone: `${cdnBase}/Cloud%20with%20lightning%20and%20rain/3D/cloud_with_lightning_and_rain_3d.png` },
+        96: { descricao: 'Tempestade com Granizo Leve', icone: `${cdnBase}/Cloud%20with%20lightning%20and%20rain/3D/cloud_with_lightning_and_rain_3d.png` },
+        99: { descricao: 'Tempestade com Granizo Forte', icone: `${cdnBase}/Cloud%20with%20lightning%20and%20rain/3D/cloud_with_lightning_and_rain_3d.png` }
     };
 
-    // Retorna a tradução encontrada ou uma resposta padrão caso o código seja desconhecido
-    return mapaClima[code] || { descricao: 'Condição Desconhecida', icone: '🌡️' };
+    return mapaClima[code] || { descricao: 'Condição Desconhecida', icone: `${cdnBase}/Thermometer/3D/thermometer_3d.png` };
 }
 
 /**
@@ -45,21 +45,14 @@ export function traduzirCodigoTempo(code) {
  */
 async function buscarServicos(url, dados = "", forma = "") {
     try {
-        // Interpola os fragmentos para compor a URL final da requisição
         const formataURL = `${url}${dados}${forma}`;
-        // Executa a requisição assíncrona HTTP GET
         const response = await fetch(formataURL);
-        
-        // Verifica se a resposta do servidor retornou com status HTTP de sucesso (200-299)
         if (!response.ok) {
             throw new Error(`Erro na requisição HTTP: ${response.status}`);
         }
-        
-        // Converte o corpo da resposta em um objeto JavaScript (JSON)
         const result = await response.json();
         return result;
     } catch (error) {
-        // Captura e exibe qualquer erro ocorrido durante a requisição no console do navegador
         console.error("Erro no serviço de API:", error);
         return null;
     }
@@ -73,13 +66,11 @@ async function buscarServicos(url, dados = "", forma = "") {
  */
 export async function buscarCoordenadasPorCidade(cidade) {
     try {
-        // encodeURIComponent garante que caracteres especiais/acentos sejam codificados corretamente na URL
         const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt&format=json`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("Falha na geocodificação");
         
         const data = await res.json();
-        // Se houver resultados no array da resposta, extrai os dados do primeiro resultado
         if (data.results && data.results.length > 0) {
             return {
                 lat: data.results[0].latitude,
@@ -100,7 +91,7 @@ export async function buscarCoordenadasPorCidade(cidade) {
  * 
  * @param {number} lat - Latitude da localização
  * @param {number} lon - Longitude da localização
- * @returns {Promise<object|null>} Dados meteorológicos detalhados (temperatura, umidade, vento, etc.)
+ * @returns {Promise<object|null>} Dados meteorológicos detalhados
  */
 export async function buscarClimaPorCoordenadas(lat, lon) {
     try {

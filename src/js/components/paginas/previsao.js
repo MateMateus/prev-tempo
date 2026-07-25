@@ -12,12 +12,11 @@ const capitais = [
 
 /**
  * Função assíncrona da página de Previsão de Capitais.
- * Demonstra o uso de requisições paralelas com resiliência a falhas individuais.
+ * Demonstra o uso de requisições paralelas com resiliência a falhas individuais e visual em 3D Glass.
  * 
  * @param {HTMLElement} app - Container de montagem da SPA
  */
 async function previsao(app) {
-    // 1. Exibe estado de carregamento temporário na tela enquanto as promessas são processadas
     app.innerHTML = `
         <section class="bem-container bem-pt-xl">
             <h1 class="bem-mb-md">Previsão em Tempo Real - Capitais</h1>
@@ -31,7 +30,6 @@ async function previsao(app) {
         </section>
     `;
 
-    // 2. Mapeia o array de capitais gerando uma lista (array) de Promessas assíncronas
     const promessasCapitais = capitais.map(async (cidade) => {
         const clima = await buscarClimaPorCoordenadas(cidade.lat, cidade.lon);
         if (!clima || !clima.current) {
@@ -40,31 +38,21 @@ async function previsao(app) {
         return { ...cidade, clima };
     });
 
-    // PONTO TÉCNICO CHAVE: Promise.allSettled()
-    // Diferente de Promise.all() (que rejeita imediatamente se UMA ÚNICA requisição falhar),
-    // Promise.allSettled() aguarda a conclusão de TODAS as promessas e retorna o status de cada uma:
-    // - { status: 'fulfilled', value: data } para requisições bem-sucedidas
-    // - { status: 'rejected', reason: error } para requisições que falharam
-    // Isso garante que uma falha em São Paulo, por exemplo, não impeça a exibição do clima de Curitiba ou Rio de Janeiro!
     const resultados = await Promise.allSettled(promessasCapitais);
 
-    // 3. Declaração da variável 'cardClima' NO ESCOPO LOCAL da função.
-    // Isso evita o acúmulo de HTML e duplicação de cards no DOM ao navegar repetidas vezes para esta rota.
     let cardClima = `
         <section class="bem-container bem-pt-xl bem-pb-xl">
             <h1 class="bem-mb-md">Previsão Meteorológica ao Vivo - Capitais</h1>
             <p class="bem-text-muted-util bem-mb-lg">
-                Acompanhe o clima atualizado em tempo real nas principais capitais brasileiras via Open-Meteo.
+                Acompanhe o clima atualizado em tempo real nas principais capitais brasileiras com ícones 3D em alta resolução.
             </p>
             <div class="bem-grid-auto">
     `;
 
-    // 4. Itera sobre os resultados resolvidos por Promise.allSettled
     for (let i = 0; i < resultados.length; i++) {
         const res = resultados[i];
         const cidadeOriginal = capitais[i];
 
-        // Se a promessa específica foi cumprida com sucesso (fulfilled)
         if (res.status === 'fulfilled' && res.value && res.value.clima) {
             const data = res.value;
             const atual = data.clima.current;
@@ -72,13 +60,15 @@ async function previsao(app) {
             const condicao = traduzirCodigoTempo(atual.weather_code);
 
             cardClima += `
-                <div class="bem-card bem-animate-fade-in">
+                <div class="bem-card--white-glass bem-animate-fade-in">
                     <div class="bem-card__header bem-flex bem-justify-between bem-items-center">
                         <div>
                             <h3 class="bem-card__title">${data.nome} - ${data.uf}</h3>
                             <span class="bem-card__subtitle">${condicao.descricao}</span>
                         </div>
-                        <div class="bem-text-2xl">${condicao.icone}</div>
+                        <div>
+                            <img src="${condicao.icone}" alt="${condicao.descricao}" class="bem-icon-3d--sm" loading="lazy">
+                        </div>
                     </div>
                     <div class="bem-card__body">
                         <div class="bem-text-2xl bem-font-bold bem-text-primary bem-mb-sm">${atual.temperature_2m}°C</div>
@@ -92,9 +82,8 @@ async function previsao(app) {
                 </div>
             `;
         } else {
-            // Tratamento gracioso individual: exibe um card de alerta apenas para a cidade que falhou
             cardClima += `
-                <div class="bem-card bem-card--flat bem-p-md bem-border-primary">
+                <div class="bem-card--white-glass bem-p-md bem-border-primary">
                     <h3 class="bem-card__title bem-text-danger">${cidadeOriginal.nome} - ${cidadeOriginal.uf}</h3>
                     <p class="bem-text-sm bem-mt-sm">Não foi possível carregar o clima para esta cidade no momento.</p>
                 </div>
@@ -107,7 +96,6 @@ async function previsao(app) {
         </section>
     `;
 
-    // 5. Injeta o HTML final gerado no container da aplicação
     app.innerHTML = cardClima;
 }
 
