@@ -29,7 +29,8 @@ function formatarHora(isoString) {
 
 /**
  * Atualiza o mapa interativo Leaflet.js com estilo CartoDB Positron Light,
- * adicionando a demarcação REAL das fronteiras do município filtrado por cidade, estado e Brasil (GeoJSON único).
+ * adicionando a demarcação REAL das fronteiras do município filtrado por cidade, estado e Brasil (GeoJSON único)
+ * com o popup limpo e amigável apenas com o nome da localização em destaque.
  */
 async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "") {
     const containerMapa = document.getElementById("mapa-clima");
@@ -49,9 +50,10 @@ async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "") {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(instanciaMapaLeaflet);
 
-    // Marcador simples nativo nas coordenadas
+    // Marcador com popup limpo e amigável exibindo apenas o nome da localização em destaque
+    const tituloPopup = estado ? `<b>${nomeCidade} - ${estado}</b>` : `<b>${nomeCidade}</b>`;
     window.L.marker([lat, lon]).addTo(instanciaMapaLeaflet)
-        .bindPopup(`<b>${nomeCidade}</b><br>Coordenadas: ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`)
+        .bindPopup(tituloPopup)
         .openPopup();
 
     // Demarcação REAL das fronteiras do município único via GeoJSON (Nominatim API filtrada)
