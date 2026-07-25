@@ -12,19 +12,19 @@ const capitais = [
 
 /**
  * Função assíncrona da página de Previsão de Capitais.
- * Demonstra o uso de requisições paralelas com resiliência a falhas individuais e visual em 3D Glass.
+ * Exibe as 6 capitais em um grid limpo e resiliente de 3 colunas.
  * 
  * @param {HTMLElement} app - Container de montagem da SPA
  */
 async function previsao(app) {
     app.innerHTML = `
-        <section class="bem-page-header bem-pt-xl">
+        <section class="bem-page-header">
             <h1 class="bem-page-header__title">Previsão em Tempo Real - Capitais</h1>
             <div class="bem-alert bem-alert--info">
                 <span class="bem-alert__icon">⏳</span>
                 <div class="bem-alert__content">
                     <div class="bem-alert__title">Carregando capitais...</div>
-                    <div class="bem-alert__message">Obtendo os dados meteorológicos ao vivo da Open-Meteo API.</div>
+                    <div class="bem-alert__message">Obtendo dados meteorológicos ao vivo da Open-Meteo API.</div>
                 </div>
             </div>
         </section>
@@ -41,14 +41,14 @@ async function previsao(app) {
     const resultados = await Promise.allSettled(promessasCapitais);
 
     let cardClima = `
-        <section class="bem-pt-xl bem-pb-xl">
+        <section class="bem-pb-xl">
             <div class="bem-page-header">
                 <h1 class="bem-page-header__title">Previsão Meteorológica ao Vivo - Capitais</h1>
                 <p class="bem-page-header__subtitle bem-mb-lg">
-                    Acompanhe o clima atualizado em tempo real nas principais capitais brasileiras com ícones 3D em alta resolução.
+                    Acompanhe o clima atualizado em tempo real nas principais capitais brasileiras.
                 </p>
             </div>
-            <div class="bem-grid-auto">
+            <div class="bem-grid-capitais">
     `;
 
     for (let i = 0; i < resultados.length; i++) {
@@ -62,7 +62,7 @@ async function previsao(app) {
             const condicao = traduzirCodigoTempo(atual.weather_code);
 
             cardClima += `
-                <div class="bem-card--white-glass bem-animate-fade-in">
+                <div class="bem-card bem-animate-fade-in">
                     <div class="bem-card__header bem-flex bem-justify-between bem-items-center">
                         <div>
                             <h3 class="bem-card__title">${data.nome} - ${data.uf}</h3>
@@ -85,7 +85,7 @@ async function previsao(app) {
             `;
         } else {
             cardClima += `
-                <div class="bem-card--white-glass bem-p-md bem-border-primary">
+                <div class="bem-card bem-card--flat bem-p-md bem-border-primary">
                     <h3 class="bem-card__title bem-text-danger">${cidadeOriginal.nome} - ${cidadeOriginal.uf}</h3>
                     <p class="bem-text-sm bem-mt-sm">Não foi possível carregar o clima para esta cidade no momento.</p>
                 </div>
