@@ -18,8 +18,8 @@ const capitais = [
  */
 async function previsao(app) {
     app.innerHTML = `
-        <section class="bem-container bem-pt-xl">
-            <h1 class="bem-mb-md">Previsão em Tempo Real - Capitais</h1>
+        <section class="bem-page-header bem-pt-xl">
+            <h1 class="bem-page-header__title">Previsão em Tempo Real - Capitais</h1>
             <div class="bem-alert bem-alert--info">
                 <span class="bem-alert__icon">⏳</span>
                 <div class="bem-alert__content">
@@ -41,11 +41,13 @@ async function previsao(app) {
     const resultados = await Promise.allSettled(promessasCapitais);
 
     let cardClima = `
-        <section class="bem-container bem-pt-xl bem-pb-xl">
-            <h1 class="bem-mb-md">Previsão Meteorológica ao Vivo - Capitais</h1>
-            <p class="bem-text-muted-util bem-mb-lg">
-                Acompanhe o clima atualizado em tempo real nas principais capitais brasileiras com ícones 3D em alta resolução.
-            </p>
+        <section class="bem-pt-xl bem-pb-xl">
+            <div class="bem-page-header">
+                <h1 class="bem-page-header__title">Previsão Meteorológica ao Vivo - Capitais</h1>
+                <p class="bem-page-header__subtitle bem-mb-lg">
+                    Acompanhe o clima atualizado em tempo real nas principais capitais brasileiras com ícones 3D em alta resolução.
+                </p>
+            </div>
             <div class="bem-grid-auto">
     `;
 

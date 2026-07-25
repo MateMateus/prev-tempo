@@ -58,15 +58,49 @@ body{
   background:var(--bem-bg);
   transition:background .25s, color .25s;
 }
-.bem-container{
-  width:100%;
-  max-width:1240px;
-  margin:0 auto;
-  padding:0 var(--bem-spacing-md);
+
+/* Centralização Global do Container Principal */
+.bem-main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bem-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--bem-spacing-md);
+  box-sizing: border-box;
 }
 .bem-container--fluid{ max-width:100% }
 .bem-container--narrow{ max-width:800px }
 .bem-grid { display: grid; gap: var(--bem-spacing-md) }
+
+/* Cabeçalhos Hero de Página Centralizados */
+.bem-page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.bem-page-header__title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.bem-page-header__subtitle {
+  font-size: 1.125rem;
+  color: #64748b;
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
 .bem-btn{
   display:inline-flex;
   align-items:center;
@@ -122,6 +156,14 @@ body{
 .bem-card__image{ width:100%;height:auto;display:block }
 .bem-card__actions{ display:flex;gap:var(--bem-spacing-sm);align-items:center }
 .bem-form{ display:flex;flex-direction:column;gap:var(--bem-spacing-md) }
+
+/* Formulários Centralizados com max-width */
+.bem-form--centered {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
 .bem-form__group{ display:flex;flex-direction:column;gap:var(--bem-spacing-xs) }
 .bem-form__label{ font-weight:500;font-size:.875rem;color:var(--bem-text) }
 .bem-form__label--required::after{ content:' *';color:var(--bem-danger) }
@@ -151,6 +193,7 @@ body{
 .bem-animate-fade-in{ animation:bem-fade-in 0.3s ease forwards}
 .bem-animate-slide-up{ animation:bem-slide-up 0.4s ease forwards}
 .bem-grid-auto{ display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:var(--bem-spacing-md)}
+.bem-grid-auto-2{ display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:var(--bem-spacing-md)}
 .bem-flex-1{ flex:1}
 .bem-flex-wrap{ flex-wrap:wrap}
 .bem-h-screen{ height:100vh}
@@ -203,6 +246,8 @@ body{
   display:flex;
   align-items:flex-start;
   gap:var(--bem-spacing-sm);
+  max-width: 800px;
+  margin: 1rem auto;
 }
 .bem-alert--info{ background-color:#dbeafe;border-color:var(--bem-primary);color:#1e40af }
 .bem-alert--success{ background-color:#d1fae5;border-color:var(--bem-success);color:#065f46 }
@@ -288,6 +333,7 @@ body{
   box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  padding: 1.5rem;
 }
 
 .bem-card--white-glass:hover {
@@ -311,6 +357,7 @@ body{
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(241, 245, 249, 0.85) 100%);
   border-bottom: 1px solid #f1f5f9;
   border-radius: 24px 24px 0 0;
+  margin: -1.5rem -1.5rem 1rem -1.5rem;
 }
 
 .bem-weather-hero__city {
