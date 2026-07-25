@@ -29,7 +29,7 @@ function formatarHora(isoString) {
 
 /**
  * Atualiza o mapa interativo Leaflet.js com estilo Light Minimalista (CartoDB Positron)
- * e adiciona um círculo translúcido destacando a zona de demarcação do bairro do CEP.
+ * e adiciona o contorno de perímetro em azul destacando a zona do bairro/município.
  */
 function atualizarMapaLeaflet(lat, lon, nomeCidade) {
     const containerMapa = document.getElementById("mapa-clima");
@@ -42,22 +42,33 @@ function atualizarMapaLeaflet(lat, lon, nomeCidade) {
 
     instanciaMapaLeaflet = window.L.map('mapa-clima').setView([lat, lon], 13);
 
+    // Camada de Tiles Light Minimalista do CartoDB Positron
     window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
         subdomains: 'abcd',
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(instanciaMapaLeaflet);
 
-    window.L.marker([lat, lon]).addTo(instanciaMapaLeaflet)
-        .bindPopup(`<b>${nomeCidade}</b><br>Coordenadas: ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`)
-        .openPopup();
-
+    // Linha de contorno / perímetro do bairro (raio de 1.5 km em tom azul com traço tracejado)
     window.L.circle([lat, lon], {
-        color: '#3b82f6',
-        fillColor: '#60a5fa',
-        fillOpacity: 0.25,
-        radius: 1200
+        color: '#2563eb',
+        weight: 2,
+        dashArray: '6, 6',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.15,
+        radius: 1500
     }).addTo(instanciaMapaLeaflet);
+
+    // Marcador visual destacado no ponto central
+    window.L.circleMarker([lat, lon], {
+        radius: 8,
+        color: '#1d4ed8',
+        weight: 3,
+        fillColor: '#60a5fa',
+        fillOpacity: 0.9
+    }).addTo(instanciaMapaLeaflet)
+    .bindPopup(`<b>${nomeCidade}</b><br>Coordenadas: ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`)
+    .openPopup();
 }
 
 /**
@@ -135,9 +146,9 @@ function renderizarDashboard(indexSelecionado = 0) {
                     </div>
                 </div>
 
-                <!-- MAPA LEAFLET LIGHT MINIMALISTA COM ZONA DE DEMARCAÇÃO -->
+                <!-- MAPA LEAFLET LIGHT MINIMALISTA COM DEMARCAÇÃO DE PERÍMETRO -->
                 <div class="bem-card--white-glass">
-                    <h4 class="bem-font-bold bem-mb-sm">📍 Localização & Cobertura do Bairro (Mapa Minimalista Light)</h4>
+                    <h4 class="bem-font-bold bem-mb-sm">📍 Demarcação de Perímetro da Região (Mapa Light)</h4>
                     <div id="mapa-clima" class="bem-map-container"></div>
                 </div>
             </div>
@@ -162,7 +173,7 @@ function renderizarDashboard(indexSelecionado = 0) {
                         </div>
                         <div class="bem-weather-subcard">
                             <span class="bem-weather-subcard__label">Variação Máx / Mín</span>
-                            <div class="bem-weather-subcard__value">${tempMaxDia}° / ${tempMinDia}°</div>
+                            <div class="bem-weather-subcard__value bem-weather-subcard__value--sm">${tempMaxDia}° / ${tempMinDia}°</div>
                         </div>
                     </div>
                 </div>
@@ -329,10 +340,8 @@ async function telaClima(app) {
             <form id="form-consulta-cep" class="bem-form bem-card--white-glass bem-form--centered">
                 <div class="bem-form__group">
                     <label for="cep" class="bem-form__label bem-form__label--required">CEP</label>
-                    <div class="bem-flex bem-gap-sm">
-                        <input type="text" id="cep" class="bem-form__input" placeholder="Ex: 01001000" maxlength="9" required>
-                        <button type="button" id="btn-buscar-cep" class="bem-btn bem-btn--primary">Buscar</button>
-                    </div>
+                    <input type="text" id="cep" class="bem-form__input" placeholder="Ex: 01001000" maxlength="9" required>
+                    <button type="button" id="btn-buscar-cep" class="bem-btn bem-btn--primary bem-btn--search-cep">Buscar</button>
                 </div>
                 <div class="bem-grid bem-grid-auto bem-mt-md">
                     <div class="bem-form__group">

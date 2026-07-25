@@ -51,12 +51,13 @@
   --bem-border:#334155;
   --bem-light:#334155;
 }
-body{
-  font-family:var(--bem-font-base);
-  line-height:1.5;
-  color:var(--bem-text);
-  background:var(--bem-bg);
-  transition:background .25s, color .25s;
+html, body {
+  overflow-x: hidden;
+  font-family: var(--bem-font-base);
+  line-height: 1.5;
+  color: var(--bem-text);
+  background: var(--bem-bg);
+  transition: background .25s, color .25s;
 }
 
 /* Centralização Global do Container Principal */
@@ -66,6 +67,7 @@ body{
   padding: 2rem 1rem;
   width: 100%;
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .bem-container {
@@ -135,6 +137,17 @@ body{
 .bem-btn:disabled,.bem-btn--disabled{ opacity:.5;cursor:not-allowed;pointer-events:none }
 .bem-btn__icon{ display:inline-flex;font-size:1.25em }
 .bem-btn__text{ display:inline-flex }
+
+/* Botão Buscar do CEP com respiro harmonioso */
+.bem-btn--search-cep {
+  margin-top: 1rem;
+  width: 100%;
+  max-width: 200px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
 .bem-card{
   background-color:var(--bem-surface);
   border-radius:var(--bem-radius-lg);
@@ -264,21 +277,21 @@ body{
 }
 .bem-alert__close:hover{ opacity:1 }
 
-/* Sticky Header / Navbar Fixa no topo com Glassmorphism */
-.bem-navbar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:var(--bem-spacing-md) var(--bem-spacing-lg);
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-  transition: background .25s, box-shadow .25s;
+/* Sticky Header / Navbar Fixa no topo durante o scroll com Glassmorphism */
+#navbar, .bem-navbar {
   position: sticky;
   top: 0;
   z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--bem-spacing-md) var(--bem-spacing-lg);
+  transition: background .25s, box-shadow .25s;
 }
 .bem-navbar--dark{ background-color:var(--bem-dark);color:#fff }
 .bem-navbar__brand{ font-size:1.5rem;font-weight:700;text-decoration:none;color:inherit }
@@ -390,6 +403,7 @@ body{
   overflow-x: auto;
   padding: 0.25rem 0.25rem 0.75rem 0.25rem;
   scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .bem-day-card {
@@ -481,6 +495,12 @@ body{
   font-size: 1.375rem;
   font-weight: 700;
   color: #0f172a;
+  white-space: nowrap;
+}
+
+.bem-weather-subcard__value--sm {
+  font-size: 1.1rem;
+  white-space: nowrap;
 }
 
 .bem-icon-3d {
@@ -508,8 +528,16 @@ body{
   }
 }
 
+/* Responsividade Mobile (< 768px) */
 @media(max-width:768px){
-  .bem-grid--cols-2,.bem-grid--cols-3,.bem-grid--cols-4 { grid-template-columns: 1fr }
+  .bem-main-container {
+    max-width: 100%;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+  .bem-grid--cols-2,.bem-grid--cols-3,.bem-grid--cols-4,.bem-grid-auto-2,.bem-grid-auto {
+    grid-template-columns: 1fr;
+  }
   .bem-navbar__menu{ display:none }
   .bem-navbar__toggle{ display:block; cursor:pointer; margin-left:auto; }
   .bem-hide-mobile{ display:none !important }
@@ -527,5 +555,16 @@ body{
   .bem-weather-hero {
     flex-direction: column;
     text-align: center;
+    padding: 1.25rem;
+  }
+  .bem-day-cards-scroll {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+  }
+  .bem-day-card {
+    min-width: 85px;
+    flex: 0 0 auto;
   }
 }
