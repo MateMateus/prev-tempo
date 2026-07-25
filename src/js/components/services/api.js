@@ -87,7 +87,8 @@ export async function buscarCoordenadasPorCidade(cidade) {
 }
 
 /**
- * Consulta a API de Previsão do Tempo da Open-Meteo a partir das coordenadas geográficas.
+ * Consulta a API de Previsão do Tempo da Open-Meteo a partir das coordenadas geográficas,
+ * obtendo dados atuais e previsão diária estendida de 7 dias.
  * 
  * @param {number} lat - Latitude da localização
  * @param {number} lon - Longitude da localização
@@ -95,7 +96,7 @@ export async function buscarCoordenadasPorCidade(cidade) {
  */
 export async function buscarClimaPorCoordenadas(lat, lon) {
     try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max&timezone=auto`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("Falha ao buscar dados de clima");
         

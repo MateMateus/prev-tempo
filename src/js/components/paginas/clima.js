@@ -1,7 +1,198 @@
 import buscarServicos, { buscarCoordenadasPorCidade, buscarClimaPorCoordenadas, traduzirCodigoTempo } from "../services/api.js";
 
+// Estado local mantido durante a sessão ativa da página
+let dadosClimaAtuais = null;
+let instanciaMapaLeaflet = null;
+
 /**
- * Função assíncrona responsável pela consulta por CEP e renderização visual em 3D White Glass.
+ * Formata a string de data (YYYY-MM-DD) para um rótulo amigável (Hoje, Amanhã, Seg, Ter...)
+ */
+function formatarDiaDaSemana(dateStr, index) {
+    if (index === 0) return 'Hoje';
+    if (index === 1) return 'Amanhã';
+    const partes = dateStr.split('-');
+    if (partes.length !== 3) return dateStr;
+    const data = new Date(partes[0], partes[1] - 1, partes[2]);
+    const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    return dias[data.getDay()];
+}
+
+/**
+ * Atualiza ou inicializa o mapa interativo Leaflet.js centralizado na cidade pesquisada.
+ */
+function atualizarMapaLeaflet(lat, lon, nomeCidade) {
+    const containerMapa = document.getElementById("mapa-clima");
+    if (!containerMapa || !window.L) return;
+
+    // Remove a instância anterior do mapa para evitar erros de reinicialização no mesmo elemento
+    if (instanciaMapaLeaflet) {
+        instanciaMapaLeaflet.remove();
+        instanciaMapaLeaflet = null;
+    }
+
+    instanciaMapaLeaflet = window.L.map('mapa-clima').setView([lat, lon], 12);
+
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(instanciaMapaLeaflet);
+
+    window.L.marker([lat, lon]).addTo(instanciaMapaLeaflet)
+        .bindPopup(`<b>${nomeCidade}</b><br>Coordenadas: ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`)
+        .openPopup();
+}
+
+/**
+ * Renderiza o painel da dashboard com base no dia selecionado (index 0 a 6).
+ */
+function renderizarDashboard(indexSelecionado = 0) {
+    const containerResultado = document.getElementById("resultado-clima");
+    if (!containerResultado || !dadosClimaAtuais) return;
+
+    const { cidade, estado, coords, climaData } = dadosClimaAtuais;
+    const diario = climaData.daily;
+    const atual = climaData.current;
+
+    // Dados do dia selecionado
+    const dataSelecionada = diario.time[indexSelecionado];
+    const rotuloDia = formatarDiaDaSemana(dataSelecionada, indexSelecionado);
+    const codeWmo = diario.weather_code[indexSelecionado];
+    const infoCondicao = traduzirCodigoTempo(codeWmo);
+
+    const tempMaxDia = diario.temperature_2m_max[indexSelecionado];
+    const tempMinDia = diario.temperature_2m_min[indexSelecionado];
+    const sensacaoDia = diario.apparent_temperature_max ? diario.apparent_temperature_max[indexSelecionado] : atual.apparent_temperature;
+    const ventoDia = diario.wind_speed_10m_max ? diario.wind_speed_10m_max[indexSelecionado] : atual.wind_speed_10m;
+    const umidadeDia = atual.relative_humidity_2m;
+
+    // Cálculo das barras do gráfico de temperatura (7 dias)
+    const maxTemps = diario.temperature_2m_max;
+    const tempAbsolutaMax = Math.max(...maxTemps, 1);
+
+    // Constrói os 7 cards de dias da semana
+    let cards7DiasHtml = '';
+    for (let i = 0; i < diario.time.length && i < 7; i++) {
+        const diaNome = formatarDiaDaSemana(diario.time[i], i);
+        const cond = traduzirCodigoTempo(diario.weather_code[i]);
+        const isSelected = i === indexSelecionado ? 'bem-day-card--active' : '';
+
+        cards7DiasHtml += `
+            <div class="bem-day-card ${isSelected}" data-index="${i}">
+                <div class="bem-day-card__name">${diaNome}</div>
+                <img src="${cond.icone}" alt="${cond.descricao}" class="bem-icon-3d--sm bem-my-auto" loading="lazy">
+                <div class="bem-day-card__temp-max">${diario.temperature_2m_max[i]}°</div>
+                <div class="bem-day-card__temp-min">${diario.temperature_2m_min[i]}°</div>
+            </div>
+        `;
+    }
+
+    // Constrói o gráfico de barras verticais de variação de temperatura para os 7 dias
+    let graficoBarrasHtml = '';
+    for (let i = 0; i < diario.time.length && i < 7; i++) {
+        const diaNome = formatarDiaDaSemana(diario.time[i], i);
+        const maxVal = diario.temperature_2m_max[i];
+        const alturaPorcentagem = Math.max(20, Math.round((maxVal / tempAbsolutaMax) * 100));
+        const isSelected = i === indexSelecionado ? 'bem-chart-col--active' : '';
+
+        graficoBarrasHtml += `
+            <div class="bem-chart-col ${isSelected}" data-index="${i}" title="${diaNome}: Máx ${maxVal}°C">
+                <span class="bem-text-xs bem-font-bold">${maxVal}°</span>
+                <div class="bem-chart-bar" style="height: ${alturaPorcentagem}%;"></div>
+                <span class="bem-chart-label">${diaNome}</span>
+            </div>
+        `;
+    }
+
+    containerResultado.innerHTML = `
+        <div class="bem-dashboard-grid bem-animate-slide-up">
+            <!-- COLUNA ESQUERDA: HERO, 7 DIAS E MAPA -->
+            <div class="bem-flex bem-flex-col bem-gap-lg">
+                <!-- HERO CARD -->
+                <div class="bem-card--white-glass">
+                    <div class="bem-weather-hero">
+                        <div>
+                            <h2 class="bem-weather-hero__city">${cidade} - ${estado}</h2>
+                            <div class="bem-weather-hero__subtitle">
+                                Previsão para <strong>${rotuloDia}</strong> (${dataSelecionada}) • ${infoCondicao.descricao}
+                            </div>
+                            <div class="bem-weather-hero__temp">
+                                ${indexSelecionado === 0 ? atual.temperature_2m + '°C' : tempMaxDia + '°C'}
+                            </div>
+                        </div>
+                        <div>
+                            <img src="${infoCondicao.icone}" alt="${infoCondicao.descricao}" class="bem-icon-3d" loading="lazy">
+                        </div>
+                    </div>
+                    
+                    <!-- 7-DAY INTERACTIVE CARDS -->
+                    <div class="bem-p-lg">
+                        <h4 class="bem-mb-sm bem-font-bold">Previsão para 7 Dias (Clique para selecionar):</h4>
+                        <div class="bem-day-cards-scroll">
+                            ${cards7DiasHtml}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAPA LEAFLET -->
+                <div class="bem-card--white-glass bem-p-lg">
+                    <h4 class="bem-font-bold bem-mb-sm">📍 Localização no Mapa Interativo</h4>
+                    <div id="mapa-clima" class="bem-map-container"></div>
+                </div>
+            </div>
+
+            <!-- COLUNA DIREITA: PAINEL DE MÉTRICAS E GRÁFICO LATERAL -->
+            <div class="bem-flex bem-flex-col bem-gap-lg">
+                <!-- PAINEL LATERAL DE MÉTRICAS -->
+                <div class="bem-card--white-glass bem-p-lg">
+                    <h3 class="bem-card__title bem-mb-md">Métricas (${rotuloDia})</h3>
+                    <div class="bem-grid bem-grid-auto-2 bem-gap-md">
+                        <div class="bem-weather-subcard">
+                            <span class="bem-weather-subcard__label">Sensação Térmica</span>
+                            <div class="bem-weather-subcard__value">${sensacaoDia}°C</div>
+                        </div>
+                        <div class="bem-weather-subcard">
+                            <span class="bem-weather-subcard__label">Umidade do Ar</span>
+                            <div class="bem-weather-subcard__value">${umidadeDia}%</div>
+                        </div>
+                        <div class="bem-weather-subcard">
+                            <span class="bem-weather-subcard__label">Vento Máximo</span>
+                            <div class="bem-weather-subcard__value">${ventoDia} km/h</div>
+                        </div>
+                        <div class="bem-weather-subcard">
+                            <span class="bem-weather-subcard__label">Máx / Mín</span>
+                            <div class="bem-weather-subcard__value">${tempMaxDia}° / ${tempMinDia}°</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRÁFICO DE TENDÊNCIA DE TEMPERATURA -->
+                <div class="bem-card--white-glass bem-p-lg">
+                    <h4 class="bem-font-bold">📊 Variação de Temperatura (7 Dias)</h4>
+                    <div class="bem-chart-container">
+                        ${graficoBarrasHtml}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Atualiza o mapa Leaflet
+    atualizarMapaLeaflet(coords.lat, coords.lon, cidade);
+
+    // Vincula eventos de clique aos 7 cards de dias e ao gráfico
+    const dayCards = containerResultado.querySelectorAll('.bem-day-card, .bem-chart-col');
+    dayCards.forEach(card => {
+        card.addEventListener('click', (e) => {
+            const idx = parseInt(card.getAttribute('data-index'), 10);
+            if (!isNaN(idx)) {
+                renderizarDashboard(idx);
+            }
+        });
+    });
+}
+
+/**
+ * Função assíncrona principal de consulta ao CEP e inicialização dos dados.
  */
 async function consultarCepEClima() {
     const campocep = document.getElementById("cep");
@@ -28,7 +219,7 @@ async function consultarCepEClima() {
             <span class="bem-alert__icon">⏳</span>
             <div class="bem-alert__content">
                 <div class="bem-alert__title">Carregando...</div>
-                <div class="bem-alert__message">Buscando endereço e dados climáticos em tempo real...</div>
+                <div class="bem-alert__message">Buscando endereço, coordenadas e previsão de 7 dias...</div>
             </div>
         </div>
     `;
@@ -77,52 +268,23 @@ async function consultarCepEClima() {
                     <span class="bem-alert__icon">⚠️</span>
                     <div class="bem-alert__content">
                         <div class="bem-alert__title">Falha no clima</div>
-                        <div class="bem-alert__message">Não foi possível carregar os dados de clima da Open-Meteo para ${cidade}.</div>
+                        <div class="bem-alert__message">Não foi possível carregar a previsão da Open-Meteo para ${cidade}.</div>
                     </div>
                 </div>
             `;
             return;
         }
 
-        const atual = climaData.current;
-        const diario = climaData.daily;
-        const infoCondicao = traduzirCodigoTempo(atual.weather_code);
+        // Armazena no estado global da sessão
+        dadosClimaAtuais = {
+            cidade,
+            estado: dadosEndereco.uf || coords.estado,
+            coords,
+            climaData
+        };
 
-        // Layout Redesign 3D White Glass com cartões internos em #f8fafc e ícone 3D em alta resolução
-        containerResultado.innerHTML = `
-            <div class="bem-card--white-glass bem-mt-lg bem-animate-slide-up">
-                <div class="bem-weather-hero">
-                    <div>
-                        <h2 class="bem-weather-hero__city">${cidade} - ${dadosEndereco.uf || coords.estado}</h2>
-                        <div class="bem-weather-hero__subtitle">${infoCondicao.descricao} • Coordenadas: ${coords.lat.toFixed(2)}°, ${coords.lon.toFixed(2)}°</div>
-                        <div class="bem-weather-hero__temp">${atual.temperature_2m}°C</div>
-                    </div>
-                    <div>
-                        <img src="${infoCondicao.icone}" alt="${infoCondicao.descricao}" class="bem-icon-3d" loading="lazy">
-                    </div>
-                </div>
-                <div class="bem-p-lg">
-                    <div class="bem-grid bem-grid-auto">
-                        <div class="bem-weather-subcard">
-                            <span class="bem-weather-subcard__label">Sensação Térmica</span>
-                            <div class="bem-weather-subcard__value">${atual.apparent_temperature}°C</div>
-                        </div>
-                        <div class="bem-weather-subcard">
-                            <span class="bem-weather-subcard__label">Umidade do Ar</span>
-                            <div class="bem-weather-subcard__value">${atual.relative_humidity_2m}%</div>
-                        </div>
-                        <div class="bem-weather-subcard">
-                            <span class="bem-weather-subcard__label">Velocidade do Vento</span>
-                            <div class="bem-weather-subcard__value">${atual.wind_speed_10m} km/h</div>
-                        </div>
-                        <div class="bem-weather-subcard">
-                            <span class="bem-weather-subcard__label">Máx / Mín do Dia</span>
-                            <div class="bem-weather-subcard__value">${diario.temperature_2m_max[0]}°C / ${diario.temperature_2m_min[0]}°C</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        // Renderiza o dia 0 (Hoje) por padrão
+        renderizarDashboard(0);
     } catch (error) {
         console.error("Erro no fluxo de consulta por CEP:", error);
         containerResultado.innerHTML = `
@@ -140,16 +302,16 @@ async function consultarCepEClima() {
 }
 
 /**
- * Função principal da página de Consulta de CEP e Clima.
+ * Função da página de Consulta de CEP & Dashboard de Clima.
  * 
- * @param {HTMLElement} app - Container principal da SPA
+ * @param {HTMLElement} app - Container de montagem principal da SPA
  */
 async function telaClima(app) {
     const formulario = `
         <section class="bem-container bem-pt-xl bem-pb-xl">
-            <h1 class="bem-mb-md">Consulta por CEP & Clima em Tempo Real</h1>
+            <h1 class="bem-mb-md">Dashboard de Clima em Tempo Real & Previsão 7 Dias</h1>
             <p class="bem-text-muted-util bem-mb-lg">
-                Digite um CEP para buscar o endereço e visualizar as condições meteorológicas em um design 3D moderno.
+                Digite um CEP para explorar a previsão completa da sua cidade com mapa interativo, gráfico e cartões interativos.
             </p>
             <form id="form-consulta-cep" class="bem-form bem-card--white-glass bem-p-lg">
                 <div class="bem-form__group">
