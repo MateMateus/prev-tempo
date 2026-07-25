@@ -1,12 +1,20 @@
 import buscarServicos, { buscarCoordenadasPorCidade, buscarClimaPorCoordenadas, traduzirCodigoTempo } from "../services/api.js";
 
+/**
+ * Função assíncrona responsável por orquestrar a consulta de CEP e a busca de dados climáticos.
+ * Realiza o tratamento de CEP, exibe o alerta de carregamento e gerencia erros graciosamente.
+ */
 async function consultarCepEClima() {
+    // Obtenção dos elementos do DOM
     const campocep = document.getElementById("cep");
     const containerStatus = document.getElementById("status-clima");
     const containerResultado = document.getElementById("resultado-clima");
     if (!campocep || !containerStatus || !containerResultado) return;
 
+    // Sanitização do CEP: remove qualquer caractere que não seja dígito numérico (ex: traços, pontos)
     const valorCep = campocep.value.replace(/\D/g, "");
+    
+    // Validação básica de comprimento: CEP no Brasil deve conter exatamente 8 dígitos
     if (valorCep.length !== 8) {
         containerResultado.innerHTML = `
             <div class="bem-alert bem-alert--warning bem-mt-md">
@@ -20,6 +28,7 @@ async function consultarCepEClima() {
         return;
     }
 
+    // 1. Exibe o feedback visual de "Carregando..." no containerStatus
     containerStatus.innerHTML = `
         <div class="bem-alert bem-alert--info bem-mt-md bem-animate-fade-in">
             <span class="bem-alert__icon">⏳</span>
@@ -29,10 +38,14 @@ async function consultarCepEClima() {
             </div>
         </div>
     `;
+    // Limpa o resultado anterior enquanto uma nova consulta está em andamento
     containerResultado.innerHTML = "";
 
     try {
+        // 2. Consulta a API ViaCEP para obter o endereço a partir do CEP sanitizado
         const dadosEndereco = await buscarServicos("https://viacep.com.br/ws/", valorCep, "/json/");
+        
+        // Se o CEP não existir na base dos Correios, o ViaCEP retorna { erro: "true" }
         if (!dadosEndereco || dadosEndereco.erro) {
             containerResultado.innerHTML = `
                 <div class="bem-alert bem-alert--danger bem-mt-md">
@@ -46,11 +59,13 @@ async function consultarCepEClima() {
             return;
         }
 
+        // 3. Preenche automaticamente os campos de texto do formulário com os dados de endereço retornados
         document.getElementById("logradouro").value = dadosEndereco.logradouro || "";
         document.getElementById("bairro").value = dadosEndereco.bairro || "";
         document.getElementById("localidade").value = dadosEndereco.localidade || "";
         document.getElementById("estado").value = dadosEndereco.estado || "";
 
+        // 4. Utiliza a cidade retornada pelo ViaCEP para obter as coordenadas de Latitude e Longitude
         const cidade = dadosEndereco.localidade;
         const coords = await buscarCoordenadasPorCidade(cidade);
         
@@ -67,6 +82,7 @@ async function consultarCepEClima() {
             return;
         }
 
+        // 5. Utiliza as coordenadas para buscar os dados de clima em tempo real na Open-Meteo API
         const climaData = await buscarClimaPorCoordenadas(coords.lat, coords.lon);
         if (!climaData || !climaData.current) {
             containerResultado.innerHTML = `
@@ -81,6 +97,7 @@ async function consultarCepEClima() {
             return;
         }
 
+        // 6. Formata e renderiza o card de clima com dados atuais e previsão diária
         const atual = climaData.current;
         const diario = climaData.daily;
         const infoCondicao = traduzirCodigoTempo(atual.weather_code);
@@ -125,6 +142,7 @@ async function consultarCepEClima() {
             </div>
         `;
     } catch (error) {
+        // Trata qualquer erro inesperado durante a execução do fluxo assíncrono
         console.error("Erro no fluxo de consulta por CEP:", error);
         containerResultado.innerHTML = `
             <div class="bem-alert bem-alert--danger bem-mt-md">
@@ -136,11 +154,19 @@ async function consultarCepEClima() {
             </div>
         `;
     } finally {
-        // Garantir que a mensagem de "Carregando..." seja SEMPRE removida, mesmo em caso de erro!
+        // PONTO TÉCNICO CHAVE: O bloco 'finally' sempre será executado ao término do bloco try/catch.
+        // Isso garante que a mensagem/indicador de "Carregando..." seja SEMPRE removido da tela,
+        // independentemente de a requisição ter tido sucesso ou ter falhado com exceção.
         containerStatus.innerHTML = "";
     }
 }
 
+/**
+ * Função da página de Consulta de CEP e Clima.
+ * Monta o formulário na div 'app' e vincula os eventos de escuta (blur e click).
+ * 
+ * @param {HTMLElement} app - Container de montagem principal da SPA
+ */
 async function telaClima(app) {
     const formulario = `
         <section class="bem-container bem-pt-xl bem-pb-xl">
@@ -181,6 +207,7 @@ async function telaClima(app) {
     `;
     app.innerHTML = formulario;
 
+    // Vincula os eventos do usuário (perda de foco no input ou clique no botão de buscar)
     const campoCep = document.getElementById("cep");
     const btnBuscar = document.getElementById("btn-buscar-cep");
 

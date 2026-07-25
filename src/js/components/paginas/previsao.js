@@ -1,5 +1,6 @@
 import { buscarClimaPorCoordenadas, traduzirCodigoTempo } from "../services/api.js";
 
+// Lista estática com as coordenadas das principais capitais brasileiras para consulta rápida
 const capitais = [
     { nome: 'São Paulo', uf: 'SP', lat: -23.5505, lon: -46.6333 },
     { nome: 'Rio de Janeiro', uf: 'RJ', lat: -22.9068, lon: -43.1729 },
@@ -9,8 +10,14 @@ const capitais = [
     { nome: 'Manaus', uf: 'AM', lat: -3.1190, lon: -60.0217 }
 ];
 
+/**
+ * Função assíncrona da página de Previsão de Capitais.
+ * Demonstra o uso de requisições paralelas com resiliência a falhas individuais.
+ * 
+ * @param {HTMLElement} app - Container de montagem da SPA
+ */
 async function previsao(app) {
-    // Exibe estado de carregamento inicial
+    // 1. Exibe estado de carregamento temporário na tela enquanto as promessas são processadas
     app.innerHTML = `
         <section class="bem-container bem-pt-xl">
             <h1 class="bem-mb-md">Previsão em Tempo Real - Capitais</h1>
@@ -24,8 +31,7 @@ async function previsao(app) {
         </section>
     `;
 
-    // Requisita os dados meteorológicos em paralelo usando Promise.allSettled
-    // Garantia técnica: a falha em uma cidade individual NÃO quebra a exibição das demais!
+    // 2. Mapeia o array de capitais gerando uma lista (array) de Promessas assíncronas
     const promessasCapitais = capitais.map(async (cidade) => {
         const clima = await buscarClimaPorCoordenadas(cidade.lat, cidade.lon);
         if (!clima || !clima.current) {
@@ -34,9 +40,16 @@ async function previsao(app) {
         return { ...cidade, clima };
     });
 
+    // PONTO TÉCNICO CHAVE: Promise.allSettled()
+    // Diferente de Promise.all() (que rejeita imediatamente se UMA ÚNICA requisição falhar),
+    // Promise.allSettled() aguarda a conclusão de TODAS as promessas e retorna o status de cada uma:
+    // - { status: 'fulfilled', value: data } para requisições bem-sucedidas
+    // - { status: 'rejected', reason: error } para requisições que falharam
+    // Isso garante que uma falha em São Paulo, por exemplo, não impeça a exibição do clima de Curitiba ou Rio de Janeiro!
     const resultados = await Promise.allSettled(promessasCapitais);
 
-    // Declaração de variável de renderização local limpa a cada navegação
+    // 3. Declaração da variável 'cardClima' NO ESCOPO LOCAL da função.
+    // Isso evita o acúmulo de HTML e duplicação de cards no DOM ao navegar repetidas vezes para esta rota.
     let cardClima = `
         <section class="bem-container bem-pt-xl bem-pb-xl">
             <h1 class="bem-mb-md">Previsão Meteorológica ao Vivo - Capitais</h1>
@@ -46,10 +59,12 @@ async function previsao(app) {
             <div class="bem-grid-auto">
     `;
 
+    // 4. Itera sobre os resultados resolvidos por Promise.allSettled
     for (let i = 0; i < resultados.length; i++) {
         const res = resultados[i];
         const cidadeOriginal = capitais[i];
 
+        // Se a promessa específica foi cumprida com sucesso (fulfilled)
         if (res.status === 'fulfilled' && res.value && res.value.clima) {
             const data = res.value;
             const atual = data.clima.current;
@@ -77,7 +92,7 @@ async function previsao(app) {
                 </div>
             `;
         } else {
-            // Card de erro gracioso específico para a cidade com falha
+            // Tratamento gracioso individual: exibe um card de alerta apenas para a cidade que falhou
             cardClima += `
                 <div class="bem-card bem-card--flat bem-p-md bem-border-primary">
                     <h3 class="bem-card__title bem-text-danger">${cidadeOriginal.nome} - ${cidadeOriginal.uf}</h3>
@@ -92,6 +107,7 @@ async function previsao(app) {
         </section>
     `;
 
+    // 5. Injeta o HTML final gerado no container da aplicação
     app.innerHTML = cardClima;
 }
 
