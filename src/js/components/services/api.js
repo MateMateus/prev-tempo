@@ -15,9 +15,10 @@ export function traduzirCodigoTempo(code) {
         3: { descricao: 'Encoberto / Nublado', icone: `${cdnBase}/Cloud/3D/cloud_3d.png` },
         45: { descricao: 'Nevoeiro', icone: `${cdnBase}/Fog/3D/fog_3d.png` },
         48: { descricao: 'Nevoeiro com Geada', icone: `${cdnBase}/Fog/3D/fog_3d.png` },
-        51: { descricao: 'Garoa Leve', icone: `${cdnBase}/Cloud%20with%20drizzle/3D/cloud_with_drizzle_3d.png` },
-        53: { descricao: 'Garoa Moderada', icone: `${cdnBase}/Cloud%20with%20drizzle/3D/cloud_with_drizzle_3d.png` },
-        55: { descricao: 'Garoa Densa', icone: `${cdnBase}/Cloud%20with%20drizzle/3D/cloud_with_drizzle_3d.png` },
+        // Garoa (51, 53, 55) mapeados com seguranca para a imagem 3D Cloud with rain oficial
+        51: { descricao: 'Garoa Leve', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
+        53: { descricao: 'Garoa Moderada', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
+        55: { descricao: 'Garoa Densa', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
         61: { descricao: 'Chuva Leve', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
         63: { descricao: 'Chuva Moderada', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
         65: { descricao: 'Chuva Forte', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
@@ -88,7 +89,7 @@ export async function buscarCoordenadasPorCidade(cidade) {
 
 /**
  * Consulta a API de Previsão do Tempo da Open-Meteo a partir das coordenadas geográficas,
- * obtendo dados atuais e previsão diária estendida de 7 dias.
+ * obtendo dados atuais, probabilidade de chuva, nascer/pôr do sol, índice UV e previsão de 7 dias.
  * 
  * @param {number} lat - Latitude da localização
  * @param {number} lon - Longitude da localização
@@ -96,7 +97,7 @@ export async function buscarCoordenadasPorCidade(cidade) {
  */
 export async function buscarClimaPorCoordenadas(lat, lon) {
     try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max,sunrise,sunset,uv_index_max,precipitation_probability_max&timezone=auto`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("Falha ao buscar dados de clima");
         
