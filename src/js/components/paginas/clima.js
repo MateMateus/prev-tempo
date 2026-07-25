@@ -1,4 +1,4 @@
-import buscarServicos, { buscarCoordenadasPorCidade, buscarClimaPorCoordenadas, traduzirCodigoTempo } from "../services/api.js";
+import buscarServicos, { buscarCoordenadasPorCidade, buscarClimaPorCoordenadas, traduzirCodigoTempo, buscarGeoJsonMunicipio } from "../services/api.js";
 
 // Estado local mantido durante a sessão ativa da página
 let dadosClimaAtuais = null;
@@ -28,9 +28,10 @@ function formatarHora(isoString) {
 }
 
 /**
- * Atualiza o mapa interativo Leaflet.js com estilo CartoDB Positron e marcador limpo.
+ * Atualiza o mapa interativo Leaflet.js com estilo CartoDB Positron Light,
+ * adicionando a demarcação REAL das fronteiras do município em GeoJSON e ajustando o enquadramento (fitBounds).
  */
-function atualizarMapaLeaflet(lat, lon, nomeCidade) {
+async function atualizarMapaLeaflet(lat, lon, nomeCidade) {
     const containerMapa = document.getElementById("mapa-clima");
     if (!containerMapa || !window.L) return;
 
@@ -41,15 +42,38 @@ function atualizarMapaLeaflet(lat, lon, nomeCidade) {
 
     instanciaMapaLeaflet = window.L.map('mapa-clima').setView([lat, lon], 12);
 
+    // Camada de Tiles Light Minimalista do CartoDB Positron
     window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
         subdomains: 'abcd',
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(instanciaMapaLeaflet);
 
+    // Marcador simples nativo nas coordenadas
     window.L.marker([lat, lon]).addTo(instanciaMapaLeaflet)
         .bindPopup(`<b>${nomeCidade}</b><br>Coordenadas: ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`)
         .openPopup();
+
+    // Demarcação REAL das fronteiras do município via GeoJSON (Nominatim API)
+    try {
+        const geoJsonData = await buscarGeoJsonMunicipio(nomeCidade);
+        if (geoJsonData && geoJsonData.features && geoJsonData.features.length > 0) {
+            const geojsonLayer = window.L.geoJSON(geoJsonData, {
+                style: {
+                    color: '#3b82f6',
+                    weight: 2,
+                    fillColor: '#93c5fd',
+                    fillOpacity: 0.2
+                }
+            }).addTo(instanciaMapaLeaflet);
+
+            if (geojsonLayer && geojsonLayer.getBounds().isValid()) {
+                instanciaMapaLeaflet.fitBounds(geojsonLayer.getBounds(), { padding: [20, 20] });
+            }
+        }
+    } catch (err) {
+        console.warn("Não foi possível carregar as fronteiras GeoJSON do município:", err);
+    }
 }
 
 /**
@@ -99,7 +123,7 @@ function renderizarDashboard(indexSelecionado = 0) {
 
     containerResultado.innerHTML = `
         <div class="bem-dashboard-grid bem-animate-slide-up">
-            <!-- COLUNA ESQUERDA: HERO, 7 DIAS E MAPA -->
+            <!-- COLUNA ESQUERDA: HERO, 7 DIAS E MAPA GEOJSON -->
             <div class="bem-flex bem-flex-col bem-gap-lg">
                 <!-- HERO CARD -->
                 <div class="bem-card--white-glass">
@@ -127,9 +151,9 @@ function renderizarDashboard(indexSelecionado = 0) {
                     </div>
                 </div>
 
-                <!-- MAPA LEAFLET LIGHT COM MARCADOR SIMPLES -->
+                <!-- MAPA LEAFLET LIGHT COM DEMARCAÇÃO REAL GEOJSON -->
                 <div class="bem-card--white-glass">
-                    <h4 class="bem-font-bold bem-mb-sm">📍 Localização no Mapa</h4>
+                    <h4 class="bem-font-bold bem-mb-sm">📍 Localização & Fronteiras do Município (GeoJSON Real)</h4>
                     <div id="mapa-clima" class="bem-map-container"></div>
                 </div>
             </div>

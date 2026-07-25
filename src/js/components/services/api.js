@@ -15,7 +15,6 @@ export function traduzirCodigoTempo(code) {
         3: { descricao: 'Encoberto / Nublado', icone: `${cdnBase}/Cloud/3D/cloud_3d.png` },
         45: { descricao: 'Nevoeiro', icone: `${cdnBase}/Fog/3D/fog_3d.png` },
         48: { descricao: 'Nevoeiro com Geada', icone: `${cdnBase}/Fog/3D/fog_3d.png` },
-        // Garoa (51, 53, 55) mapeados com seguranca para a imagem 3D Cloud with rain oficial
         51: { descricao: 'Garoa Leve', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
         53: { descricao: 'Garoa Moderada', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
         55: { descricao: 'Garoa Densa', icone: `${cdnBase}/Cloud%20with%20rain/3D/cloud_with_rain_3d.png` },
@@ -83,6 +82,25 @@ export async function buscarCoordenadasPorCidade(cidade) {
         return null;
     } catch (error) {
         console.error("Erro ao buscar coordenadas:", error);
+        return null;
+    }
+}
+
+/**
+ * Consulta a API do Nominatim (OpenStreetMap) para obter o polígono de fronteira GeoJSON real do município.
+ * 
+ * @param {string} cidade - Nome do município a ser consultado
+ * @returns {Promise<object|null>} Objeto GeoJSON dos limites municipais
+ */
+export async function buscarGeoJsonMunicipio(cidade) {
+    try {
+        const url = `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cidade)}&polygon_geojson=1&format=geojson`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Falha ao buscar limites GeoJSON do município");
+        const data = await res.json();
+        return data;
+    } catch (error) {
+        console.error("Erro ao buscar GeoJSON do município:", error);
         return null;
     }
 }
