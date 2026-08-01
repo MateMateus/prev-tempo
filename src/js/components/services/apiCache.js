@@ -1,8 +1,29 @@
 import buscarNoMundo from "./api.js";
 import { memoriaPermanente } from "./storageStrategy.js";
 
-// Define a estrategia de armazenamento a ser utilizada pelo cache
+// Define a estratégia de armazenamento a ser utilizada pelo cache
 const storage = memoriaPermanente;
+
+/**
+ * Identifica o nome amigável do serviço com base na URL consultada.
+ * 
+ * @param {string} url - URL completa formatada
+ * @returns {string} Rótulo limpo e legível do serviço
+ */
+function identificarServico(url) {
+    if (url.includes('viacep.com.br')) return 'ViaCEP';
+    if (url.includes('geocoding-api.open-meteo.com')) return 'Open-Meteo Geocoding';
+    if (url.includes('nominatim.openstreetmap.org')) return 'Nominatim GeoJSON';
+    if (url.includes('api.open-meteo.com')) return 'Open-Meteo Previsão';
+    if (url.includes('rickandmortyapi.com')) return 'Rick and Morty API';
+
+    try {
+        const parsedUrl = new URL(url);
+        return parsedUrl.hostname.replace('www.', '');
+    } catch {
+        return 'Serviço HTTP';
+    }
+}
 
 /**
  * Serviço assíncrono de busca com suporte a cache em localStorage.
@@ -14,29 +35,26 @@ const storage = memoriaPermanente;
  */
 async function buscarServicos(url, dados = "", forma = "") {
     const formataURL = `${url}${dados}${forma}`;
-    const timerLabel = `⏱️ Cache/API [${formataURL}]`;
+    const nomeServico = identificarServico(formataURL);
+    const inicio = performance.now();
 
-    // Verifica se os dados já existem no armazenamento local
+    // 1. Caso o dado já exista no cache (localStorage)
     if (storage.existe(formataURL)) {
-        console.time(timerLabel);
-        console.log(`📦 [CACHE] Retornando dados em cache (localStorage) para: ${formataURL}`);
         const dadosLocais = storage.buscarDadosLocal(formataURL);
-        console.timeEnd(timerLabel);
+        const duracao = (performance.now() - inicio).toFixed(2);
+        console.log(`📦 [CACHE] ${nomeServico}: ${duracao}ms`);
         return dadosLocais;
     }
 
-    // Se não existir no cache, realiza a requisição na rede (servidor)
-    console.time(timerLabel);
-    console.log(`🌐 [API] Buscando dados no servidor remoto para: ${formataURL}`);
+    // 2. Caso contrário, faz a busca na rede (servidor remoto)
     const resultadoDoServidor = await buscarNoMundo(url, dados, forma);
+    const duracao = Math.round(performance.now() - inicio);
 
-    // Salva o resultado no cache para futuras consultas se a resposta for válida
     if (resultadoDoServidor) {
         storage.salvarDadosLocal(formataURL, resultadoDoServidor);
-        console.log(`💾 [CACHE] Dados armazenados no localStorage para a chave: ${formataURL}`);
     }
-    console.timeEnd(timerLabel);
 
+    console.log(`🌐 [API] ${nomeServico}: ${duracao}ms`);
     return resultadoDoServidor;
 }
 
