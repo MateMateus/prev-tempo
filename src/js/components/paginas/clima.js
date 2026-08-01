@@ -34,22 +34,20 @@ function formatarHora(isoString) {
  * com o popup limpo e amigável apenas com o nome da localização em destaque.
  */
 async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "") {
-    const containerMapa = document.getElementById("mapa-clima");
-    if (!containerMapa || !window.L) return;
-
     if (window.instanciaMapaClima) {
-        window.instanciaMapaClima.remove();
+        try {
+            window.instanciaMapaClima.off();
+            window.instanciaMapaClima.remove();
+        } catch (e) {
+            console.warn("Aviso ao remover mapa anterior:", e);
+        }
         window.instanciaMapaClima = null;
     }
 
-    if (instanciaMapaLeaflet) {
-        instanciaMapaLeaflet.remove();
-        instanciaMapaLeaflet = null;
-    }
+    const containerMapa = document.getElementById("mapa-clima");
+    if (!containerMapa || !window.L) return;
 
-    if (containerMapa._leaflet_id) {
-        containerMapa._leaflet_id = null;
-    }
+    containerMapa.innerHTML = '';
 
     window.instanciaMapaClima = window.L.map('mapa-clima').setView([lat, lon], 12);
     instanciaMapaLeaflet = window.instanciaMapaClima;
