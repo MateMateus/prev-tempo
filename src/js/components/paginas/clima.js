@@ -37,12 +37,22 @@ async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "") {
     const containerMapa = document.getElementById("mapa-clima");
     if (!containerMapa || !window.L) return;
 
+    if (window.instanciaMapaClima) {
+        window.instanciaMapaClima.remove();
+        window.instanciaMapaClima = null;
+    }
+
     if (instanciaMapaLeaflet) {
         instanciaMapaLeaflet.remove();
         instanciaMapaLeaflet = null;
     }
 
-    instanciaMapaLeaflet = window.L.map('mapa-clima').setView([lat, lon], 12);
+    if (containerMapa._leaflet_id) {
+        containerMapa._leaflet_id = null;
+    }
+
+    window.instanciaMapaClima = window.L.map('mapa-clima').setView([lat, lon], 12);
+    instanciaMapaLeaflet = window.instanciaMapaClima;
 
     // Camada de Tiles Light Minimalista do CartoDB Positron
     window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
