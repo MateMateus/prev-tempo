@@ -380,7 +380,7 @@ async function consultarCepEClima() {
  */
 async function telaClima(app) {
     const formulario = `
-        <section class="bem-page-header">
+        <section class="bem-page-header" id="clima-container">
             <h1 class="bem-page-header__title">Dashboard de Clima em Tempo Real & Previsão 7 Dias</h1>
             <p class="bem-page-header__subtitle bem-mb-lg">
                 Digite um CEP para explorar a previsão completa da sua cidade com mapa minimalista light e detalhes do sol.
