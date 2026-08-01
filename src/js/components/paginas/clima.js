@@ -58,12 +58,7 @@ async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "", bairro = 
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(instanciaMapaLeaflet);
 
-    // Marcador com popup limpo exibindo o Bairro, Cidade e Estado
     const tituloPopup = bairro ? `<b>${bairro} - ${nomeCidade} (${estado})</b>` : (estado ? `<b>${nomeCidade} - ${estado}</b>` : `<b>${nomeCidade}</b>`);
-    window.L.marker([lat, lon]).addTo(instanciaMapaLeaflet)
-        .bindPopup(tituloPopup)
-        .openPopup();
-
     let desenhouPoligono = false;
 
     // 1. Tenta buscar o GeoJSON específico do Bairro + Cidade no OpenStreetMap Nominatim
@@ -81,7 +76,15 @@ async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "", bairro = 
                 }).addTo(instanciaMapaLeaflet);
 
                 if (geojsonLayer && geojsonLayer.getBounds().isValid()) {
-                    instanciaMapaLeaflet.fitBounds(geojsonLayer.getBounds(), { padding: [20, 20] });
+                    // Pega o centro exato da demarcação do bairro
+                    const centroBairro = geojsonLayer.getBounds().getCenter();
+
+                    // Posiciona o pino EXATAMENTE dentro da área demarcada
+                    const marker = window.L.marker(centroBairro).addTo(instanciaMapaLeaflet);
+                    marker.bindPopup(tituloPopup).openPopup();
+
+                    // Ajusta o zoom para focar no bairro com o pino visível
+                    instanciaMapaLeaflet.fitBounds(geojsonLayer.getBounds(), { padding: [30, 30] });
                     desenhouPoligono = true;
                 }
             }
@@ -90,8 +93,11 @@ async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "", bairro = 
         console.warn("Não foi possível carregar o GeoJSON do bairro:", err);
     }
 
-    // 2. Fallback: se o bairro não possuir polígono cadastrado, cria um círculo translúcido de raio no ponto
+    // 2. Fallback: se o bairro não possuir polígono cadastrado, usa as coordenadas genéricas da cidade com pino e círculo
     if (!desenhouPoligono) {
+        const marker = window.L.marker([lat, lon]).addTo(instanciaMapaLeaflet);
+        marker.bindPopup(tituloPopup).openPopup();
+
         window.L.circle([lat, lon], {
             color: '#3b82f6',
             fillColor: '#93c5fd',
