@@ -1,4 +1,5 @@
-import buscarServicos, { buscarCoordenadasPorCidade, buscarClimaPorCoordenadas, traduzirCodigoTempo, buscarGeoJsonMunicipio } from "../services/api.js";
+import buscarServicos from "../services/apiCache.js";
+import { buscarCoordenadasPorCidade, buscarClimaPorCoordenadas, traduzirCodigoTempo, buscarGeoJsonMunicipio } from "../services/api.js";
 
 // Estado local mantido durante a sessão ativa da página
 let dadosClimaAtuais = null;

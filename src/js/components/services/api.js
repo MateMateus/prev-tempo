@@ -1,3 +1,5 @@
+import buscarServicos from "./apiCache.js";
+
 /**
  * Converte os códigos numéricos da OMM (Organização Meteorológica Mundial - WMO)
  * em uma descrição textual em português e uma URL de ícone 3D em alta definição (Microsoft Fluent Emoji 3D).
@@ -36,14 +38,10 @@ export function traduzirCodigoTempo(code) {
 }
 
 /**
- * Serviço assíncrono genérico para realizar requisições HTTP GET utilizando a API Fetch nativa.
- * 
- * @param {string} url - URL base do endpoint
- * @param {string} dados - Parâmetro adicional (ex: CEP)
- * @param {string} forma - Sufixo do formato da URL (ex: "/json/")
- * @returns {Promise<object|null>} Retorna os dados em JSON ou null em caso de erro
+ * Função assíncrona base que realiza o fetch HTTP na API e retorna o JSON.
+ * Executa a requisição real sem passar pelo cache.
  */
-async function buscarServicos(url, dados = "", forma = "") {
+export async function buscarNoMundo(url, dados = "", forma = "") {
     try {
         const formataURL = `${url}${dados}${forma}`;
         const response = await fetch(formataURL);
@@ -53,25 +51,20 @@ async function buscarServicos(url, dados = "", forma = "") {
         const result = await response.json();
         return result;
     } catch (error) {
-        console.error("Erro no serviço de API:", error);
+        console.error("Erro no serviço de API (buscarNoMundo):", error);
         return null;
     }
 }
 
 /**
  * Consulta a API de Geocodificação da Open-Meteo para converter o nome de uma cidade em latitude e longitude.
- * 
- * @param {string} cidade - Nome da cidade a ser consultada (ex: "São Paulo")
- * @returns {Promise<object|null>} Retorna { lat, lon, nome, estado } ou null se não encontrar
+ * Utiliza a camada de apiCache (buscarServicos).
  */
 export async function buscarCoordenadasPorCidade(cidade) {
     try {
         const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt&format=json`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Falha na geocodificação");
-        
-        const data = await res.json();
-        if (data.results && data.results.length > 0) {
+        const data = await buscarServicos(url);
+        if (data && data.results && data.results.length > 0) {
             return {
                 lat: data.results[0].latitude,
                 lon: data.results[0].longitude,
@@ -87,22 +80,14 @@ export async function buscarCoordenadasPorCidade(cidade) {
 }
 
 /**
- * Consulta a API do Nominatim (OpenStreetMap) para obter o polígono de fronteira GeoJSON real do município,
- * restringindo a busca pela cidade, estado e país (Brasil) e selecionando apenas o primeiro resultado exato.
- * 
- * @param {string} cidade - Nome do município a ser consultado
- * @param {string} estado - Nome ou sigla do estado
- * @returns {Promise<object|null>} Objeto GeoJSON único do município oficial
+ * Consulta a API do Nominatim (OpenStreetMap) para obter o polígono de fronteira GeoJSON real do município.
+ * Utiliza a camada de apiCache (buscarServicos).
  */
 export async function buscarGeoJsonMunicipio(cidade, estado = "") {
     try {
         const url = `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cidade)}&state=${encodeURIComponent(estado)}&country=Brazil&polygon_geojson=1&format=geojson`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Falha ao buscar limites GeoJSON do município");
-        const data = await res.json();
-        
+        const data = await buscarServicos(url);
         if (data && data.features && data.features.length > 0) {
-            // Retorna estritamente a primeira feature encontrada (município oficial)
             return {
                 type: "FeatureCollection",
                 features: [data.features[0]]
@@ -116,20 +101,13 @@ export async function buscarGeoJsonMunicipio(cidade, estado = "") {
 }
 
 /**
- * Consulta a API de Previsão do Tempo da Open-Meteo a partir das coordenadas geográficas,
- * obtendo dados atuais, probabilidade de chuva, nascer/pôr do sol, índice UV e previsão de 7 dias.
- * 
- * @param {number} lat - Latitude da localização
- * @param {number} lon - Longitude da localização
- * @returns {Promise<object|null>} Dados meteorológicos detalhados
+ * Consulta a API de Previsão do Tempo da Open-Meteo a partir das coordenadas geográficas.
+ * Utiliza a camada de apiCache (buscarServicos).
  */
 export async function buscarClimaPorCoordenadas(lat, lon) {
     try {
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max,sunrise,sunset,uv_index_max,precipitation_probability_max&timezone=auto`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Falha ao buscar dados de clima");
-        
-        const data = await res.json();
+        const data = await buscarServicos(url);
         return data;
     } catch (error) {
         console.error("Erro ao buscar clima da Open-Meteo:", error);
@@ -137,4 +115,4 @@ export async function buscarClimaPorCoordenadas(lat, lon) {
     }
 }
 
-export default buscarServicos;
+export default buscarNoMundo;
