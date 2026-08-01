@@ -1,5 +1,5 @@
 import buscarServicos from "../services/apiCache.js";
-import { buscarCoordenadasPorCidade, buscarClimaPorCoordenadas, traduzirCodigoTempo, buscarGeoJsonMunicipio } from "../services/api.js";
+import { buscarCoordenadasPorCidade, buscarClimaPorCoordenadas, traduzirCodigoTempo, buscarGeoJsonMunicipio, buscarGeoJsonBairro } from "../services/api.js";
 
 // Estado local mantido durante a sessão ativa da página
 let dadosClimaAtuais = null;
@@ -30,10 +30,9 @@ function formatarHora(isoString) {
 
 /**
  * Atualiza o mapa interativo Leaflet.js com estilo CartoDB Positron Light,
- * adicionando a demarcação REAL das fronteiras do município filtrado por cidade, estado e Brasil (GeoJSON único)
- * com o popup limpo e amigável apenas com o nome da localização em destaque.
+ * adicionando a demarcação REAL das fronteiras do BAIRRO (GeoJSON) com fallback para raio circular.
  */
-async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "") {
+async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "", bairro = "") {
     if (window.instanciaMapaClima) {
         try {
             window.instanciaMapaClima.off();
@@ -49,7 +48,7 @@ async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "") {
 
     containerMapa.innerHTML = '';
 
-    window.instanciaMapaClima = window.L.map('mapa-clima').setView([lat, lon], 12);
+    window.instanciaMapaClima = window.L.map('mapa-clima').setView([lat, lon], 13);
     instanciaMapaLeaflet = window.instanciaMapaClima;
 
     // Camada de Tiles Light Minimalista do CartoDB Positron
@@ -59,31 +58,47 @@ async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "") {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(instanciaMapaLeaflet);
 
-    // Marcador com popup limpo e amigável exibindo apenas o nome da localização em destaque
-    const tituloPopup = estado ? `<b>${nomeCidade} - ${estado}</b>` : `<b>${nomeCidade}</b>`;
+    // Marcador com popup limpo exibindo o Bairro, Cidade e Estado
+    const tituloPopup = bairro ? `<b>${bairro} - ${nomeCidade} (${estado})</b>` : (estado ? `<b>${nomeCidade} - ${estado}</b>` : `<b>${nomeCidade}</b>`);
     window.L.marker([lat, lon]).addTo(instanciaMapaLeaflet)
         .bindPopup(tituloPopup)
         .openPopup();
 
-    // Demarcação REAL das fronteiras do município único via GeoJSON (Nominatim API filtrada)
-    try {
-        const geoJsonData = await buscarGeoJsonMunicipio(nomeCidade, estado);
-        if (geoJsonData && geoJsonData.features && geoJsonData.features.length > 0) {
-            const geojsonLayer = window.L.geoJSON(geoJsonData, {
-                style: {
-                    color: '#3b82f6',
-                    weight: 2,
-                    fillColor: '#93c5fd',
-                    fillOpacity: 0.2
-                }
-            }).addTo(instanciaMapaLeaflet);
+    let desenhouPoligono = false;
 
-            if (geojsonLayer && geojsonLayer.getBounds().isValid()) {
-                instanciaMapaLeaflet.fitBounds(geojsonLayer.getBounds(), { padding: [20, 20] });
+    // 1. Tenta buscar o GeoJSON específico do Bairro + Cidade no OpenStreetMap Nominatim
+    try {
+        if (bairro) {
+            const geoJsonBairro = await buscarGeoJsonBairro(bairro, nomeCidade, estado);
+            if (geoJsonBairro && geoJsonBairro.features && geoJsonBairro.features.length > 0) {
+                const geojsonLayer = window.L.geoJSON(geoJsonBairro, {
+                    style: {
+                        color: '#3b82f6',
+                        weight: 2,
+                        fillColor: '#93c5fd',
+                        fillOpacity: 0.25
+                    }
+                }).addTo(instanciaMapaLeaflet);
+
+                if (geojsonLayer && geojsonLayer.getBounds().isValid()) {
+                    instanciaMapaLeaflet.fitBounds(geojsonLayer.getBounds(), { padding: [20, 20] });
+                    desenhouPoligono = true;
+                }
             }
         }
     } catch (err) {
-        console.warn("Não foi possível carregar as fronteiras GeoJSON do município:", err);
+        console.warn("Não foi possível carregar o GeoJSON do bairro:", err);
+    }
+
+    // 2. Fallback: se o bairro não possuir polígono cadastrado, cria um círculo translúcido de raio no ponto
+    if (!desenhouPoligono) {
+        window.L.circle([lat, lon], {
+            color: '#3b82f6',
+            fillColor: '#93c5fd',
+            fillOpacity: 0.2,
+            radius: 1200
+        }).addTo(instanciaMapaLeaflet);
+        instanciaMapaLeaflet.setView([lat, lon], 14);
     }
 }
 
@@ -94,7 +109,7 @@ function renderizarDashboard(indexSelecionado = 0) {
     const containerResultado = document.getElementById("resultado-clima");
     if (!containerResultado || !dadosClimaAtuais) return;
 
-    const { cidade, estado, coords, climaData } = dadosClimaAtuais;
+    const { cidade, estado, bairro, coords, climaData } = dadosClimaAtuais;
     const diario = climaData.daily;
     const atual = climaData.current;
 
@@ -132,15 +147,17 @@ function renderizarDashboard(indexSelecionado = 0) {
         `;
     }
 
+    const localizacaoHeader = bairro ? `${cidade} (${bairro}) - ${estado}` : `${cidade} - ${estado}`;
+
     containerResultado.innerHTML = `
         <div class="bem-dashboard-grid bem-animate-slide-up">
-            <!-- COLUNA ESQUERDA: HERO, 7 DIAS E MAPA GEOJSON -->
+            <!-- COLUNA ESQUERDA: HERO, 7 DIAS E MAPA GEOJSON DO BAIRRO -->
             <div class="bem-flex bem-flex-col bem-gap-lg">
                 <!-- HERO CARD -->
                 <div class="bem-card--white-glass">
                     <div class="bem-weather-hero">
                         <div>
-                            <h2 class="bem-weather-hero__city">${cidade} - ${estado}</h2>
+                            <h2 class="bem-weather-hero__city">${localizacaoHeader}</h2>
                             <div class="bem-weather-hero__subtitle">
                                 Previsão para <strong>${rotuloDia}</strong> (${dataSelecionada}) • ${infoCondicao.descricao}
                             </div>
@@ -162,9 +179,9 @@ function renderizarDashboard(indexSelecionado = 0) {
                     </div>
                 </div>
 
-                <!-- MAPA LEAFLET LIGHT COM DEMARCAÇÃO REAL GEOJSON DO MUNICÍPIO -->
+                <!-- MAPA LEAFLET LIGHT COM DEMARCAÇÃO REAL GEOJSON DO BAIRRO -->
                 <div class="bem-card--white-glass">
-                    <h4 class="bem-font-bold bem-mb-sm">📍 Localização & Fronteiras do Município (GeoJSON Real)</h4>
+                    <h4 class="bem-font-bold bem-mb-sm">📍 Cobertura e Fronteiras do Bairro (GeoJSON)</h4>
                     <div id="mapa-clima" class="bem-map-container"></div>
                 </div>
             </div>
@@ -220,7 +237,7 @@ function renderizarDashboard(indexSelecionado = 0) {
         </div>
     `;
 
-    atualizarMapaLeaflet(coords.lat, coords.lon, cidade, estado);
+    atualizarMapaLeaflet(coords.lat, coords.lon, cidade, estado, bairro);
 
     const dayCards = containerResultado.querySelectorAll('.bem-day-card');
     dayCards.forEach(card => {
@@ -289,6 +306,7 @@ async function consultarCepEClima() {
 
         const cidade = dadosEndereco.localidade;
         const estadoSigla = dadosEndereco.uf || "";
+        const bairro = dadosEndereco.bairro || "";
         const coords = await buscarCoordenadasPorCidade(cidade);
         
         if (!coords) {
@@ -321,6 +339,7 @@ async function consultarCepEClima() {
         dadosClimaAtuais = {
             cidade,
             estado: estadoSigla || coords.estado,
+            bairro,
             coords,
             climaData
         };

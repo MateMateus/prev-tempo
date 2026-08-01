@@ -80,6 +80,36 @@ export async function buscarCoordenadasPorCidade(cidade) {
 }
 
 /**
+ * Consulta a API do Nominatim (OpenStreetMap) para obter o polígono de fronteira GeoJSON do bairro + cidade + estado.
+ * Utiliza a camada de apiCache (buscarServicos).
+ */
+export async function buscarGeoJsonBairro(bairro, cidade, estado = "") {
+    try {
+        if (!bairro) return null;
+        const query = `${encodeURIComponent(bairro)},+${encodeURIComponent(cidade)},+${encodeURIComponent(estado)},+Brazil`;
+        const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=geojson&polygon_geojson=1`;
+        const data = await buscarServicos(url);
+
+        if (data && data.features && data.features.length > 0) {
+            const featureComPoligono = data.features.find(f => 
+                f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
+            );
+
+            if (featureComPoligono) {
+                return {
+                    type: "FeatureCollection",
+                    features: [featureComPoligono]
+                };
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error("Erro ao buscar GeoJSON do bairro:", error);
+        return null;
+    }
+}
+
+/**
  * Consulta a API do Nominatim (OpenStreetMap) para obter o polígono de fronteira GeoJSON real do município.
  * Utiliza a camada de apiCache (buscarServicos).
  */
