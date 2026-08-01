@@ -58,53 +58,59 @@ async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "", bairro = 
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(instanciaMapaLeaflet);
 
-    const tituloPopup = bairro ? `<b>${bairro} - ${nomeCidade} (${estado})</b>` : (estado ? `<b>${nomeCidade} - ${estado}</b>` : `<b>${nomeCidade}</b>`);
-    let desenhouPoligono = false;
+    const tituloPopup = bairro ? `<b>${bairro} - ${nomeCidade} / ${estado}</b>` : (estado ? `<b>${nomeCidade} / ${estado}</b>` : `<b>${nomeCidade}</b>`);
+    let geoJsonResultado = null;
 
-    // 1. Tenta buscar o GeoJSON específico do Bairro + Cidade no OpenStreetMap Nominatim
-    try {
-        if (bairro) {
-            const geoJsonBairro = await buscarGeoJsonBairro(bairro, nomeCidade, estado);
-            if (geoJsonBairro && geoJsonBairro.features && geoJsonBairro.features.length > 0) {
-                const geojsonLayer = window.L.geoJSON(geoJsonBairro, {
-                    style: {
-                        color: '#3b82f6',
-                        weight: 2,
-                        fillColor: '#93c5fd',
-                        fillOpacity: 0.25
-                    }
-                }).addTo(instanciaMapaLeaflet);
-
-                if (geojsonLayer && geojsonLayer.getBounds().isValid()) {
-                    // Pega o centro exato da demarcação do bairro
-                    const centroBairro = geojsonLayer.getBounds().getCenter();
-
-                    // Posiciona o pino EXATAMENTE dentro da área demarcada
-                    const marker = window.L.marker(centroBairro).addTo(instanciaMapaLeaflet);
-                    marker.bindPopup(tituloPopup).openPopup();
-
-                    // Ajusta o zoom para focar no bairro com o pino visível
-                    instanciaMapaLeaflet.fitBounds(geojsonLayer.getBounds(), { padding: [30, 30] });
-                    desenhouPoligono = true;
-                }
-            }
+    // 1ª Tentativa: Busca o polígono GeoJSON do BAIRRO + CIDADE + ESTADO
+    if (bairro) {
+        try {
+            geoJsonResultado = await buscarGeoJsonBairro(bairro, nomeCidade, estado);
+        } catch (err) {
+            console.warn("GeoJSON do bairro não disponível:", err);
         }
-    } catch (err) {
-        console.warn("Não foi possível carregar o GeoJSON do bairro:", err);
     }
 
-    // 2. Fallback: se o bairro não possuir polígono cadastrado, usa as coordenadas genéricas da cidade com pino e círculo
+    // 2ª Tentativa (Fallback): Se o bairro não retornar um polígono, busca as fronteiras do MUNICÍPIO/CIDADE
+    if (!geoJsonResultado) {
+        try {
+            geoJsonResultado = await buscarGeoJsonMunicipio(nomeCidade, estado);
+        } catch (err) {
+            console.warn("GeoJSON do município não disponível:", err);
+        }
+    }
+
+    let desenhouPoligono = false;
+
+    // Renderização do Polígono (do Bairro ou do Município)
+    if (geoJsonResultado && geoJsonResultado.features && geoJsonResultado.features.length > 0) {
+        const geojsonLayer = window.L.geoJSON(geoJsonResultado, {
+            style: {
+                color: '#3b82f6',
+                weight: 2,
+                fillColor: '#93c5fd',
+                fillOpacity: 0.25
+            }
+        }).addTo(instanciaMapaLeaflet);
+
+        if (geojsonLayer && geojsonLayer.getBounds().isValid()) {
+            // Pega o centro exato da demarcação do polígono obtido
+            const centroPoligono = geojsonLayer.getBounds().getCenter();
+
+            // Posiciona o pino EXATAMENTE dentro da área demarcada
+            const marker = window.L.marker(centroPoligono).addTo(instanciaMapaLeaflet);
+            marker.bindPopup(tituloPopup).openPopup();
+
+            // Ajusta o zoom para enquadrar a área com o pino visível
+            instanciaMapaLeaflet.fitBounds(geojsonLayer.getBounds(), { padding: [30, 30] });
+            desenhouPoligono = true;
+        }
+    }
+
+    // Fallback final (Sem L.circle): coloca o pino nas coordenadas gerais da cidade caso nenhum polígono seja retornado
     if (!desenhouPoligono) {
         const marker = window.L.marker([lat, lon]).addTo(instanciaMapaLeaflet);
         marker.bindPopup(tituloPopup).openPopup();
-
-        window.L.circle([lat, lon], {
-            color: '#3b82f6',
-            fillColor: '#93c5fd',
-            fillOpacity: 0.2,
-            radius: 1200
-        }).addTo(instanciaMapaLeaflet);
-        instanciaMapaLeaflet.setView([lat, lon], 14);
+        instanciaMapaLeaflet.setView([lat, lon], 13);
     }
 }
 
