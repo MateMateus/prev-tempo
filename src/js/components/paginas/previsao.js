@@ -21,8 +21,8 @@ async function previsao(app) {
     app.innerHTML = `
         <section class="bem-container bem-pt-xl">
             <h1 class="bem-mb-md">Previsão em Tempo Real - Capitais</h1>
-            <div class="bem-alert bem-alert--info">
-                <span class="bem-alert__icon">⏳</span>
+            <div class="bem-alert bem-alert--info bem-flex bem-items-center bem-gap-md">
+                <span class="bem-spinner bem-spinner--primary"></span>
                 <div class="bem-alert__content">
                     <div class="bem-alert__title">Carregando capitais...</div>
                     <div class="bem-alert__message">Obtendo os dados meteorológicos ao vivo da Open-Meteo API.</div>

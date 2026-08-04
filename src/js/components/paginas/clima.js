@@ -28,10 +28,10 @@ async function consultarCepEClima() {
         return;
     }
 
-    // 1. Exibe o feedback visual de "Carregando..." no containerStatus
+    // 1. Exibe o feedback visual de "Carregando..." no containerStatus com spinner animado
     containerStatus.innerHTML = `
-        <div class="bem-alert bem-alert--info bem-mt-md bem-animate-fade-in">
-            <span class="bem-alert__icon">⏳</span>
+        <div class="bem-alert bem-alert--info bem-mt-md bem-animate-fade-in bem-flex bem-items-center bem-gap-md">
+            <span class="bem-spinner bem-spinner--primary"></span>
             <div class="bem-alert__content">
                 <div class="bem-alert__title">Carregando...</div>
                 <div class="bem-alert__message">Buscando endereço e dados climáticos em tempo real...</div>
