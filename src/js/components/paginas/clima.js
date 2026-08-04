@@ -165,6 +165,114 @@ async function consultarCepEClima() {
 }
 
 /**
+ * Função para buscar o clima atual utilizando a API nativa de Geolocalização do navegador.
+ */
+async function consultarClimaPorGeolocalizacao() {
+    const containerStatus = document.getElementById("status-clima");
+    const containerResultado = document.getElementById("resultado-clima");
+    if (!containerStatus || !containerResultado) return;
+
+    if (!navigator.geolocation) {
+        containerResultado.innerHTML = `
+            <div class="bem-alert bem-alert--warning bem-mt-md">
+                <span class="bem-alert__icon">⚠️</span>
+                <div class="bem-alert__content">
+                    <div class="bem-alert__title">Geolocalização indisponível</div>
+                    <div class="bem-alert__message">Seu navegador não suporta geolocalização.</div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    containerStatus.innerHTML = `
+        <div class="bem-alert bem-alert--info bem-mt-md bem-animate-fade-in">
+            <span class="bem-alert__icon">⏳</span>
+            <div class="bem-alert__content">
+                <div class="bem-alert__title">Obtendo localização...</div>
+                <div class="bem-alert__message">Aguardando permissão de GPS para identificar sua posição...</div>
+            </div>
+        </div>
+    `;
+    containerResultado.innerHTML = "";
+
+    navigator.geolocation.getCurrentPosition(async (posicao) => {
+        const { latitude, longitude } = posicao.coords;
+        try {
+            const climaData = await buscarClimaPorCoordenadas(latitude, longitude);
+            if (!climaData || !climaData.current) throw new Error("Falha ao buscar dados climáticos");
+
+            const atual = climaData.current;
+            const diario = climaData.daily;
+            const infoCondicao = traduzirCodigoTempo(atual.weather_code);
+
+            containerResultado.innerHTML = `
+                <div class="bem-card bem-mt-lg bem-animate-slide-up">
+                    <div class="bem-card__header bem-flex bem-justify-between bem-items-center">
+                        <div>
+                            <h2 class="bem-card__title">Sua Localização Atual 📍</h2>
+                            <span class="bem-card__subtitle">Coordenadas: ${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°</span>
+                        </div>
+                        <div class="bem-text-2xl">${infoCondicao.icone}</div>
+                    </div>
+                    <div class="bem-card__body">
+                        <div class="bem-grid bem-grid-auto">
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Temperatura Atual</span>
+                                <div class="bem-text-2xl bem-font-bold bem-text-primary">${atual.temperature_2m}°C</div>
+                            </div>
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Sensação Térmica</span>
+                                <div class="bem-text-2xl bem-font-bold">${atual.apparent_temperature}°C</div>
+                            </div>
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Condição do Tempo</span>
+                                <div class="bem-font-medium">${infoCondicao.descricao}</div>
+                            </div>
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Umidade do Ar</span>
+                                <div class="bem-font-medium">${atual.relative_humidity_2m}%</div>
+                            </div>
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Velocidade do Vento</span>
+                                <div class="bem-font-medium">${atual.wind_speed_10m} km/h</div>
+                            </div>
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Máx / Mín do Dia</span>
+                                <div class="bem-font-medium">${diario.temperature_2m_max[0]}°C / ${diario.temperature_2m_min[0]}°C</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            containerResultado.innerHTML = `
+                <div class="bem-alert bem-alert--danger bem-mt-md">
+                    <span class="bem-alert__icon">❌</span>
+                    <div class="bem-alert__content">
+                        <div class="bem-alert__title">Erro no Clima Local</div>
+                        <div class="bem-alert__message">Não foi possível consultar os dados de clima da sua localização.</div>
+                    </div>
+                </div>
+            `;
+        } finally {
+            containerStatus.innerHTML = "";
+        }
+    }, (erro) => {
+        containerStatus.innerHTML = "";
+        containerResultado.innerHTML = `
+            <div class="bem-alert bem-alert--warning bem-mt-md">
+                <span class="bem-alert__icon">⚠️</span>
+                <div class="bem-alert__content">
+                    <div class="bem-alert__title">Permissão Negada</div>
+                    <div class="bem-alert__message">Não foi possível acessar a localização. Verifique as permissões do seu navegador.</div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+/**
  * Função da página de Consulta de CEP e Clima.
  * Monta o formulário na div 'app' e vincula os eventos de escuta (blur e click).
  * 
@@ -183,6 +291,7 @@ async function telaClima(app) {
                     <div class="bem-flex bem-gap-sm">
                         <input type="text" id="cep" class="bem-form__input" placeholder="Ex: 01001000" maxlength="9" required>
                         <button type="button" id="btn-buscar-cep" class="bem-btn bem-btn--primary">Buscar</button>
+                        <button type="button" id="btn-geo" class="bem-btn bem-btn--secondary" title="Usar minha localização atual">📍 Minha Localização</button>
                     </div>
                 </div>
                 <div class="bem-grid bem-grid-auto bem-mt-md">
@@ -213,12 +322,16 @@ async function telaClima(app) {
     // Vincula os eventos do usuário (perda de foco no input ou clique no botão de buscar)
     const campoCep = document.getElementById("cep");
     const btnBuscar = document.getElementById("btn-buscar-cep");
+    const btnGeo = document.getElementById("btn-geo");
 
     if (campoCep) {
         campoCep.addEventListener("blur", consultarCepEClima);
     }
     if (btnBuscar) {
         btnBuscar.addEventListener("click", consultarCepEClima);
+    }
+    if (btnGeo) {
+        btnGeo.addEventListener("click", consultarClimaPorGeolocalizacao);
     }
 
     // Carrega automaticamente a última busca armazenada no localStorage se existir
