@@ -48,11 +48,13 @@ async function consultarCepEClima() {
         // Se o CEP não existir na base dos Correios, o ViaCEP retorna { erro: "true" }
         if (!dadosEndereco || dadosEndereco.erro) {
             containerResultado.innerHTML = `
-                <div class="bem-alert bem-alert--danger bem-mt-md">
-                    <span class="bem-alert__icon">❌</span>
-                    <div class="bem-alert__content">
-                        <div class="bem-alert__title">CEP não encontrado</div>
-                        <div class="bem-alert__message">Não encontramos informações para o CEP informado.</div>
+                <div class="bem-card bem-card--flat bem-p-lg bem-mt-md bem-border-danger bem-animate-fade-in">
+                    <div class="bem-flex bem-items-center bem-gap-md">
+                        <span class="bem-text-2xl">🔍❌</span>
+                        <div>
+                            <h3 class="bem-text-danger bem-mb-xs">CEP não encontrado</h3>
+                            <p class="bem-text-muted-util">Não encontramos informações para o CEP <strong>${valorCep}</strong>. Verifique se os números foram digitados corretamente.</p>
+                        </div>
                     </div>
                 </div>
             `;
@@ -148,11 +150,13 @@ async function consultarCepEClima() {
         // Trata qualquer erro inesperado durante a execução do fluxo assíncrono
         console.error("Erro no fluxo de consulta por CEP:", error);
         containerResultado.innerHTML = `
-            <div class="bem-alert bem-alert--danger bem-mt-md">
-                <span class="bem-alert__icon">🚨</span>
-                <div class="bem-alert__content">
-                    <div class="bem-alert__title">Erro Inesperado</div>
-                    <div class="bem-alert__message">Ocorreu um erro ao processar sua solicitação. Tente novamente.</div>
+            <div class="bem-card bem-card--flat bem-p-lg bem-mt-md bem-border-danger bem-animate-fade-in">
+                <div class="bem-flex bem-items-center bem-gap-md">
+                    <span class="bem-text-2xl">🌐⚠️</span>
+                    <div>
+                        <h3 class="bem-text-danger bem-mb-xs">Falha na conexão com os serviços</h3>
+                        <p class="bem-text-muted-util">Não foi possível obter a previsão do tempo no momento. Verifique sua conexão de internet ou tente novamente em instantes.</p>
+                    </div>
                 </div>
             </div>
         `;
