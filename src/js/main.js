@@ -37,6 +37,7 @@ window.addEventListener("hashchange", () => {
 
 // Definição da rota de fallback para páginas não encontradas (Erro 404)
 const rota404 = { 
+    titulo: 'PrevTempo - Página Não Encontrada (404)',
     pagina: (container) => {
         container.innerHTML = `
             <div class="bem-container bem-text-center bem-pt-xl">
@@ -49,8 +50,17 @@ const rota404 = {
 
 // Função responsável por renderizar a página correspondente à rota atual
 async function render() {
+    // Normaliza a hash removendo possíveis query params se houver
+    const hashLimpo = hash.split('?')[0];
+
     // Busca a rota no mapa pelo hash atual; se não existir, utiliza a 'rota404'
-    const rotaAtual = mapaDeRotas[hash] || rota404;
+    const rotaAtual = mapaDeRotas[hashLimpo] || mapaDeRotas[hash] || rota404;
+
+    // Atualiza dinamicamente o título do documento (aba do navegador)
+    if (rotaAtual.titulo) {
+        document.title = rotaAtual.titulo;
+    }
+
     // Executa a função da página passando o elemento container 'app'
     await rotaAtual.pagina(app);
 }
