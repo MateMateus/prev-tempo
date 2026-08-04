@@ -65,6 +65,9 @@ async function consultarCepEClima() {
         document.getElementById("localidade").value = dadosEndereco.localidade || "";
         document.getElementById("estado").value = dadosEndereco.estado || "";
 
+        // Salva o último CEP consultado no localStorage
+        localStorage.setItem("prevtempo_ultimo_cep", valorCep);
+
         // 4. Utiliza a cidade retornada pelo ViaCEP para obter as coordenadas de Latitude e Longitude
         const cidade = dadosEndereco.localidade;
         const coords = await buscarCoordenadasPorCidade(cidade);
@@ -216,6 +219,13 @@ async function telaClima(app) {
     }
     if (btnBuscar) {
         btnBuscar.addEventListener("click", consultarCepEClima);
+    }
+
+    // Carrega automaticamente a última busca armazenada no localStorage se existir
+    const ultimoCepSalvo = localStorage.getItem("prevtempo_ultimo_cep");
+    if (ultimoCepSalvo && campoCep) {
+        campoCep.value = ultimoCepSalvo;
+        consultarCepEClima();
     }
 }
 
