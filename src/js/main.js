@@ -1,10 +1,15 @@
 // Importa a função que gera o menu de navegação dinâmico (Navbar)
 import navbar from "./components/navbar/navbar.js";
+// Importa o componente de rodapé (Footer)
+import footer from "./components/footer/footer.js";
 // Importa a lista de rotas da aplicação (mapeamento de URLs e funções de página)
 import roteador from "./components/rotas/rotas.js";
 
 // Inicializa a barra de navegação injetando as rotas cadastradas
 navbar(roteador);
+
+// Inicializa o rodapé global
+footer(document.getElementById('footer'));
 
 // Captura a div de montagem principal da SPA (Single Page Application)
 const app = document.getElementById('app');
