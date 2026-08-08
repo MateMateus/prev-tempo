@@ -51,7 +51,14 @@
   --bem-border:#334155;
   --bem-light:#334155;
 }
-html, body {
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
@@ -63,18 +70,23 @@ html, body {
   transition: background .25s, color .25s;
 }
 
-#app, main, body, .bem-main-container {
+#app, main, .bem-main-container {
+  flex: 1 0 auto;
   width: 100% !important;
-  max-width: 100% !important;
-  overflow-x: hidden !important;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 80px;
   box-sizing: border-box;
 }
 
-/* Centralização Global do Container Principal com Padding-Top para a Navbar Fixa */
-#app, main, .bem-main-container {
-  padding-top: 80px;
-  max-width: 1200px;
-  margin: 0 auto;
+/* Estilo do Rodapé Fixo na Base da Tela (Sticky Footer) */
+#footer, .bem-footer {
+  margin-top: auto !important;
+  width: 100% !important;
+  padding: 1.25rem 0 !important;
+  background-color: var(--bem-surface);
+  border-top: 1px solid var(--bem-border);
+  box-sizing: border-box !important;
 }
 
 .bem-container {
