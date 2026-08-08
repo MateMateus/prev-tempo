@@ -407,7 +407,6 @@ async function consultarCepEClima() {
 }
 
 /**
-/**
  * Função para buscar o clima atual utilizando a API nativa de Geolocalização do navegador.
  */
 async function consultarClimaPorGeolocalizacao() {

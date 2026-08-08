@@ -8,8 +8,11 @@ import roteador from "./components/rotas/rotas.js";
 // Inicializa a barra de navegação injetando as rotas cadastradas
 navbar(roteador);
 
-// Inicializa o rodapé global
-footer(document.getElementById('footer'));
+// Inicializa o rodapé global se o elemento existir
+const elementoFooter = document.getElementById('footer');
+if (elementoFooter) {
+    footer(elementoFooter);
+}
 
 // Captura a div de montagem principal da SPA (Single Page Application)
 const app = document.getElementById('app');
