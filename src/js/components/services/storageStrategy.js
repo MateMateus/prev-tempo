@@ -17,15 +17,35 @@ const memoriaTemporaria = {
     }
 };
 
-// Armazenamento em LocalStorage (persistente entre recarregamentos e sessões)
+// Armazenamento em LocalStorage (persistente entre recarregamentos e sessões com suporte a TTL)
 const memoriaPermanente = {
-    existe(chave) {
-        return localStorage.getItem(chave) !== null;
+    existe(chave, ttlMs = 0) {
+        try {
+            const dado = localStorage.getItem(chave);
+            if (!dado) return false;
+            if (ttlMs <= 0) return true;
+            const parsed = JSON.parse(dado);
+            if (parsed && typeof parsed === 'object' && parsed.timestamp) {
+                const expirou = (Date.now() - parsed.timestamp) > ttlMs;
+                if (expirou) {
+                    localStorage.removeItem(chave);
+                    return false;
+                }
+            }
+            return true;
+        } catch {
+            return false;
+        }
     },
     buscarDadosLocal(chave) {
         try {
             const dado = localStorage.getItem(chave);
-            return dado ? JSON.parse(dado) : null;
+            if (!dado) return null;
+            const parsed = JSON.parse(dado);
+            if (parsed && typeof parsed === 'object' && 'timestamp' in parsed && 'payload' in parsed) {
+                return parsed.payload;
+            }
+            return parsed;
         } catch (error) {
             console.error("Erro ao ler do localStorage:", error);
             return null;
@@ -33,7 +53,11 @@ const memoriaPermanente = {
     },
     salvarDadosLocal(chave, valor) {
         try {
-            localStorage.setItem(chave, JSON.stringify(valor));
+            const itemComTimestamp = {
+                timestamp: Date.now(),
+                payload: valor
+            };
+            localStorage.setItem(chave, JSON.stringify(itemComTimestamp));
         } catch (error) {
             console.error("Erro ao salvar no localStorage:", error);
         }

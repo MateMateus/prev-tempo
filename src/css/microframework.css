@@ -52,7 +52,7 @@
   --bem-light:#334155;
 }
 html, body {
-  width: 100vw;
+  width: 100%;
   max-width: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -64,7 +64,7 @@ html, body {
 }
 
 #app, main, body, .bem-main-container {
-  width: 100vw !important;
+  width: 100% !important;
   max-width: 100% !important;
   overflow-x: hidden !important;
   box-sizing: border-box;
@@ -73,7 +73,7 @@ html, body {
 /* Centralização Global do Container Principal com Padding-Top para a Navbar Fixa */
 #app, main, .bem-main-container {
   padding-top: 80px;
-  max-width: 1200px !important;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -222,11 +222,17 @@ html, body {
 .bem-animate-slide-up{ animation:bem-slide-up 0.4s ease forwards}
 .bem-grid-auto{ display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:var(--bem-spacing-md)}
 .bem-grid-auto-2{ display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:var(--bem-spacing-md)}
-.bem-flex-1{ flex:1}
+.bem-flex{ display:flex; min-width:0}
+.bem-flex-col{ display:flex; flex-direction:column; min-width:0}
+.bem-flex-row{ display:flex; flex-direction:row; min-width:0}
+.bem-justify-center{ justify-content:center}
+.bem-justify-between{ justify-content:space-between}
+.bem-items-center{ align-items:center}
+.bem-flex-1{ flex:1; min-width:0}
 .bem-flex-wrap{ flex-wrap:wrap}
 .bem-h-screen{ height:100vh}
 .bem-min-h-screen{ min-height:100vh}
-.bem-w-screen{ width:100vw}
+.bem-w-screen{ width:100%}
 .bem-m-0{ margin:0}
 .bem-p-0{ padding:0}
 .bem-mx-auto{ margin-left:auto;margin-right:auto}
@@ -540,240 +546,6 @@ html, body {
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.1));
 }
 
-@media(max-width:992px){
-  .bem-dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-  .bem-grid-capitais {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Responsividade Mobile Real e Definitiva (< 768px) com Contenção Estrita */
-@media (max-width: 768px) {
-  *, *::before, *::after {
-    box-sizing: border-box !important;
-  }
-
-  html, body {
-    width: 100vw !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-  }
-
-  #app, main, body, .bem-main-container, .bem-container {
-    width: 100vw !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-  }
-
-  #navbar, .bem-navbar {
-    padding: 0 12px !important;
-    width: 100vw !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .bem-navbar__menu { display: none }
-  .bem-navbar__toggle { display: block; cursor: pointer; margin-left: auto; }
-  .bem-hide-mobile { display: none !important }
-  .bem-navbar__checkbox:checked ~ .bem-navbar__menu {
-    display: flex !important;
-    flex-direction: column;
-    align-items: stretch;
-    position: fixed; top: 60px; left: 0; right: 0;
-    background-color: var(--bem-surface);
-    padding: var(--bem-spacing-md);
-    box-shadow: var(--bem-shadow-md);
-    animation: bem-slide-up 0.3s forwards;
-    z-index: 10000;
-  }
-
-  /* Remoção de Larguras Fixas e Liberação de Min-Width em Cards e Form */
-  #clima-container,
-  .bem-card--white-glass,
-  .bem-card,
-  .bem-dashboard-grid,
-  .bem-weather-hero,
-  .bem-form,
-  .bem-form--centered,
-  .bem-weather-subcard,
-  .bem-alert {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
-
-  .bem-card--white-glass {
-    padding: 1rem !important;
-  }
-
-  /* CSS Flex Layout Responsivo no Card Hero */
-  .bem-weather-hero {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-    padding: 1rem !important;
-    margin: 0 0 1rem 0 !important;
-    border-radius: 16px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    gap: 1rem !important;
-  }
-
-  .bem-weather-hero > div {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-  }
-
-  /* Contenção de Títulos, Textos Longos e Popups */
-  .bem-weather-hero__city,
-  .bem-weather-hero__subtitle,
-  .bem-page-header__title,
-  .bem-page-header__subtitle,
-  .bem-weather-subcard__value,
-  .bem-card__title,
-  .leaflet-popup-content {
-    max-width: 100% !important;
-    width: 100% !important;
-    text-align: center !important;
-    overflow-wrap: break-word !important;
-    word-break: break-word !important;
-  }
-
-  .leaflet-popup-content {
-    white-space: normal !important;
-    font-size: 0.85rem !important;
-  }
-
-  #clima-container .bem-page-header__title {
-    font-size: 1.4rem !important;
-    line-height: 1.3 !important;
-  }
-
-  #clima-container .bem-page-header__subtitle {
-    font-size: 0.875rem !important;
-  }
-
-  .bem-weather-hero__city {
-    font-size: 1.3rem !important;
-  }
-
-  .bem-weather-hero__temp {
-    font-size: 2.5rem !important;
-    margin-top: 0.25rem !important;
-    text-align: center !important;
-    width: 100% !important;
-  }
-
-  .bem-icon-3d {
-    width: 72px !important;
-    height: 72px !important;
-    margin: 0 auto !important;
-  }
-
-  /* Carrossel de 7 Dias: Scroll Horizontal Fluido sem Estourar a Tela */
-  .bem-day-cards-scroll {
-    display: flex !important;
-    gap: 10px !important;
-    overflow-x: auto !important;
-    padding-bottom: 8px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-
-  .bem-day-card {
-    flex: 0 0 auto !important;
-    width: 90px !important;
-    min-width: 90px !important;
-  }
-
-  /* Form & Grids em 1 Coluna no Mobile */
-  .bem-dashboard-grid,
-  .bem-grid-capitais,
-  .bem-grid-auto,
-  .bem-grid-auto-2 {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 0.75rem !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  .bem-form--centered {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 1rem !important;
-  }
-
-  .bem-map-container {
-    height: 250px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  /* Container Específico Mobile da Consulta CEP (#clima-container) */
-  .bem-clima-page,
-  #clima-container {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-    margin: 0 auto !important;
-    box-sizing: border-box !important;
-    overflow-x: hidden !important;
-  }
-
-  .bem-clima-input-wrap {
-    flex-direction: column !important;
-    gap: 0.75rem !important;
-    width: 100% !important;
-  }
-
-  .bem-clima-input-wrap .bem-form__input {
-    width: 100% !important;
-    text-align: center !important;
-    font-size: 1.05rem !important;
-    padding: 0.85rem !important;
-    border-radius: 12px !important;
-  }
-
-  .bem-clima-input-wrap .bem-btn--search-cep,
-  #clima-container .bem-btn--search-cep {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0.85rem !important;
-    font-size: 1rem !important;
-    font-weight: 700 !important;
-    border-radius: 12px !important;
-  }
-
-  #clima-container .bem-clima-form,
-  #clima-container .bem-form--centered {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 1.25rem 1rem !important;
-    margin: 0 0 1.25rem 0 !important;
-    border-radius: 20px !important;
-  }
-}
-
 /* ==========================================================================
    CONTAINER BASE DA PÁGINA CONSULTA CEP
    ========================================================================== */
@@ -799,4 +571,315 @@ html, body {
 .bem-clima-input-wrap .bem-btn--search-cep {
   margin-top: 0;
   width: auto;
+}
+
+@media(max-width:992px){
+  .bem-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .bem-grid-capitais {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Responsividade Mobile Real e Definitiva (< 768px) com Contenção Estrita */
+@media (max-width: 768px) {
+  *, *::before, *::after {
+    box-sizing: border-box !important;
+  }
+
+  html, body {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #app, main, .bem-main-container, .bem-container, .bem-clima-page, #clima-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #navbar, .bem-navbar {
+    padding: 0 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .bem-navbar__menu { display: none }
+  .bem-navbar__toggle { display: block; cursor: pointer; margin-left: auto; }
+  .bem-hide-mobile { display: none !important }
+  .bem-navbar__checkbox:checked ~ .bem-navbar__menu {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    position: fixed; top: 60px; left: 0; right: 0;
+    background-color: var(--bem-surface);
+    padding: var(--bem-spacing-md);
+    box-shadow: var(--bem-shadow-md);
+    animation: bem-slide-up 0.3s forwards;
+    z-index: 10000;
+  }
+
+  /* Remoção de Larguras Fixas e Liberação de Min-Width em Cards e Form */
+  .bem-card--white-glass,
+  .bem-card,
+  .bem-dashboard-grid,
+  .bem-weather-hero,
+  .bem-form,
+  .bem-form--centered,
+  .bem-weather-subcard,
+  .bem-alert {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .bem-card--white-glass {
+    padding: 0.85rem 0.6rem !important;
+    overflow: hidden !important;
+    border-radius: 16px !important;
+  }
+
+  /* CSS Flex Layout Responsivo no Card Hero */
+  .bem-weather-hero {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 0.85rem 0.5rem !important;
+    margin: 0 0 0.75rem 0 !important;
+    border-radius: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    gap: 0.5rem !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .bem-weather-hero > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  /* Subcards de Métricas e Detalhes no Mobile */
+  .bem-weather-subcard {
+    padding: 0.75rem 0.4rem !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    overflow: hidden !important;
+  }
+
+  .bem-weather-subcard__label {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.2rem !important;
+    text-align: center !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.2 !important;
+  }
+
+  .bem-weather-subcard__value,
+  .bem-weather-subcard__value--sm {
+    font-size: 1.05rem !important;
+    text-align: center !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Contenção de Títulos, Textos Longos e Popups */
+  .bem-weather-hero__city,
+  .bem-weather-hero__subtitle,
+  .bem-page-header__title,
+  .bem-page-header__subtitle,
+  .bem-card__title,
+  .leaflet-popup-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    text-align: center !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+    box-sizing: border-box !important;
+  }
+
+  .leaflet-popup-content {
+    white-space: nowrap !important;
+    font-size: 0.85rem !important;
+    text-align: center !important;
+    margin: 6px 10px !important;
+    line-height: 1.3 !important;
+  }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 12px !important;
+    padding: 2px 4px !important;
+  }
+
+  #clima-container .bem-page-header__title {
+    font-size: 1.25rem !important;
+    line-height: 1.25 !important;
+  }
+
+  #clima-container .bem-page-header__subtitle {
+    font-size: 0.825rem !important;
+  }
+
+  .bem-weather-hero__city {
+    font-size: 1.15rem !important;
+    line-height: 1.25 !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+  }
+
+  .bem-weather-hero__subtitle {
+    font-size: 0.825rem !important;
+    word-break: break-word !important;
+  }
+
+  .bem-weather-hero__temp {
+    font-size: 2rem !important;
+    margin-top: 0.2rem !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    word-break: break-word !important;
+  }
+
+  .bem-icon-3d {
+    width: 56px !important;
+    height: 56px !important;
+    margin: 0 auto !important;
+  }
+
+  /* Carrossel de 7 Dias: Scroll Horizontal Fluido sem Estourar a Tela */
+  .bem-day-cards-scroll {
+    display: flex !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    padding-bottom: 6px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+
+  .bem-day-card {
+    flex: 0 0 75px !important;
+    width: 75px !important;
+    min-width: 75px !important;
+    max-width: 75px !important;
+    padding: 0.6rem 0.35rem !important;
+  }
+
+  /* Form & Grids no Mobile */
+  .bem-dashboard-grid,
+  .bem-grid-capitais,
+  .bem-grid-auto {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.6rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Grid de Métricas 2 por Linha ou 1 por Linha no Mobile com Ajuste Fino */
+  .bem-grid-auto-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .bem-form--centered {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.85rem 0.6rem !important;
+  }
+
+  .bem-map-container {
+    height: 220px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  /* Container Específico Mobile da Consulta CEP (#clima-container) */
+  .bem-clima-page,
+  #clima-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .bem-clima-input-wrap {
+    flex-direction: column !important;
+    gap: 0.6rem !important;
+    width: 100% !important;
+  }
+
+  .bem-clima-input-wrap .bem-form__input {
+    width: 100% !important;
+    text-align: center !important;
+    font-size: 1rem !important;
+    padding: 0.75rem !important;
+    border-radius: 10px !important;
+  }
+
+  .bem-clima-input-wrap .bem-btn--search-cep,
+  #clima-container .bem-btn--search-cep {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0.75rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+  }
+
+  #clima-container .bem-clima-form,
+  #clima-container .bem-form--centered {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1rem 0.6rem !important;
+    margin: 0 0 1rem 0 !important;
+    border-radius: 16px !important;
+  }
 }

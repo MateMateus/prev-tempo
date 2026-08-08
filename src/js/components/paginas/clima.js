@@ -48,7 +48,15 @@ async function atualizarMapaLeaflet(lat, lon, nomeCidade, estado = "", bairro = 
 
     containerMapa.innerHTML = '';
 
-    window.instanciaMapaClima = window.L.map('mapa-clima').setView([lat, lon], 13);
+    // Inicialização do mapa bloqueando o arraste por toque para permitir rolagem fluida no celular
+    window.instanciaMapaClima = window.L.map('mapa-clima', {
+        dragging: false,
+        scrollWheelZoom: false,
+        touchZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        tap: false
+    }).setView([lat, lon], 13);
     instanciaMapaLeaflet = window.instanciaMapaClima;
 
     // Camada de Tiles Light Minimalista do CartoDB Positron
@@ -262,6 +270,9 @@ function renderizarDashboard(indexSelecionado = 0) {
     });
 }
 
+let buscaEmAndamento = false;
+let ultimoCepConsultado = "";
+
 /**
  * Função assíncrona principal de consulta ao CEP e inicialização dos dados.
  */
@@ -278,12 +289,17 @@ async function consultarCepEClima() {
                 <span class="bem-alert__icon">⚠️</span>
                 <div class="bem-alert__content">
                     <div class="bem-alert__title">CEP Inválido</div>
-                    <div class="bem-alert__message">Por favor, digite um CEP válido com 8 dígitos.</div>
+                    <div class="bem-alert__message">Por favor, digite um CEP válido com 8 dígitos (ex: 01001-000).</div>
                 </div>
             </div>
         `;
         return;
     }
+
+    if (buscaEmAndamento) return;
+    if (valorCep === ultimoCepConsultado && containerResultado.children.length > 0) return;
+
+    buscaEmAndamento = true;
 
     containerStatus.innerHTML = `
         <div class="bem-alert bem-alert--info bem-mt-md bem-animate-fade-in">
@@ -319,7 +335,7 @@ async function consultarCepEClima() {
         const cidade = dadosEndereco.localidade;
         const estadoSigla = dadosEndereco.uf || "";
         const bairro = dadosEndereco.bairro || "";
-        const coords = await buscarCoordenadasPorCidade(cidade);
+        const coords = await buscarCoordenadasPorCidade(cidade, estadoSigla);
         
         if (!coords) {
             containerResultado.innerHTML = `
@@ -356,6 +372,7 @@ async function consultarCepEClima() {
             climaData
         };
 
+        ultimoCepConsultado = valorCep;
         renderizarDashboard(0);
     } catch (error) {
         console.error("Erro no fluxo de consulta por CEP:", error);
@@ -369,6 +386,7 @@ async function consultarCepEClima() {
             </div>
         `;
     } finally {
+        buscaEmAndamento = false;
         containerStatus.innerHTML = "";
     }
 }
@@ -390,8 +408,8 @@ async function telaClima(app) {
                     <div class="bem-form__group">
                         <label for="cep" class="bem-form__label bem-form__label--required">CEP</label>
                         <div class="bem-clima-input-wrap">
-                            <input type="text" id="cep" class="bem-form__input" placeholder="Ex: 01001000" maxlength="9" required>
-                            <button type="button" id="btn-buscar-cep" class="bem-btn bem-btn--primary bem-btn--search-cep">Buscar</button>
+                            <input type="text" id="cep" class="bem-form__input" placeholder="Ex: 01001-000" maxlength="9" required autocomplete="off">
+                            <button type="submit" id="btn-buscar-cep" class="bem-btn bem-btn--primary bem-btn--search-cep">Buscar</button>
                         </div>
                     </div>
                     <div class="bem-grid bem-grid-auto bem-mt-md">
@@ -420,14 +438,35 @@ async function telaClima(app) {
     `;
     app.innerHTML = formulario;
 
+    const formCep = document.getElementById("form-consulta-cep");
     const campoCep = document.getElementById("cep");
-    const btnBuscar = document.getElementById("btn-buscar-cep");
 
     if (campoCep) {
-        campoCep.addEventListener("blur", consultarCepEClima);
+        // Máscara dinâmica de CEP: 00000-000
+        campoCep.addEventListener("input", (e) => {
+            let val = e.target.value.replace(/\D/g, "");
+            if (val.length > 8) val = val.substring(0, 8);
+            if (val.length > 5) {
+                e.target.value = val.substring(0, 5) + "-" + val.substring(5);
+            } else {
+                e.target.value = val;
+            }
+        });
+
+        // Busca automática quando clica fora (blur)
+        campoCep.addEventListener("blur", () => {
+            const val = campoCep.value.replace(/\D/g, "");
+            if (val.length === 8 && val !== ultimoCepConsultado) {
+                consultarCepEClima();
+            }
+        });
     }
-    if (btnBuscar) {
-        btnBuscar.addEventListener("click", consultarCepEClima);
+
+    if (formCep) {
+        formCep.addEventListener("submit", (e) => {
+            e.preventDefault();
+            consultarCepEClima();
+        });
     }
 }
 

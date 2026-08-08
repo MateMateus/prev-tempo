@@ -60,16 +60,17 @@ export async function buscarNoMundo(url, dados = "", forma = "") {
  * Consulta a API de Geocodificação da Open-Meteo para converter o nome de uma cidade em latitude e longitude.
  * Utiliza a camada de apiCache (buscarServicos).
  */
-export async function buscarCoordenadasPorCidade(cidade) {
+export async function buscarCoordenadasPorCidade(cidade, estado = "") {
     try {
-        const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt&format=json`;
+        const termoBusca = estado ? `${cidade}, ${estado}` : cidade;
+        const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(termoBusca)}&count=1&language=pt&format=json`;
         const data = await buscarServicos(url);
         if (data && data.results && data.results.length > 0) {
             return {
                 lat: data.results[0].latitude,
                 lon: data.results[0].longitude,
                 nome: data.results[0].name,
-                estado: data.results[0].admin1 || ""
+                estado: data.results[0].admin1 || estado
             };
         }
         return null;
@@ -109,19 +110,28 @@ export async function buscarGeoJsonBairro(bairro, cidade, estado = "") {
     }
 }
 
-/**
- * Consulta a API do Nominatim (OpenStreetMap) para obter o polígono de fronteira GeoJSON real do município.
- * Utiliza a camada de apiCache (buscarServicos).
- */
 export async function buscarGeoJsonMunicipio(cidade, estado = "") {
     try {
-        const url = `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cidade)}&state=${encodeURIComponent(estado)}&country=Brazil&polygon_geojson=1&format=geojson`;
+        const query = `${encodeURIComponent(cidade)},+${encodeURIComponent(estado)},+Brazil`;
+        const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=geojson&polygon_geojson=1`;
         const data = await buscarServicos(url);
         if (data && data.features && data.features.length > 0) {
-            return {
-                type: "FeatureCollection",
-                features: [data.features[0]]
-            };
+            const cidadeLower = cidade.toLowerCase();
+            const featureComPoligono = data.features.find(f => 
+                f.geometry && 
+                (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon') &&
+                f.properties && f.properties.display_name &&
+                f.properties.display_name.toLowerCase().includes(cidadeLower)
+            ) || data.features.find(f => 
+                f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
+            );
+
+            if (featureComPoligono) {
+                return {
+                    type: "FeatureCollection",
+                    features: [featureComPoligono]
+                };
+            }
         }
         return null;
     } catch (error) {

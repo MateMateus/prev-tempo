@@ -25,8 +25,21 @@ function identificarServico(url) {
     }
 }
 
+function obterTtlServico(url) {
+    if (url.includes('api.open-meteo.com/v1/forecast')) {
+        return 30 * 60 * 1000; // 30 minutos para Previsão do Tempo
+    }
+    if (url.includes('viacep.com.br')) {
+        return 24 * 60 * 60 * 1000; // 24 horas para CEP
+    }
+    if (url.includes('geocoding-api.open-meteo.com') || url.includes('nominatim.openstreetmap.org')) {
+        return 12 * 60 * 60 * 1000; // 12 horas para Geocodificação / GeoJSON
+    }
+    return 2 * 60 * 60 * 1000; // 2 horas padrão
+}
+
 /**
- * Serviço assíncrono de busca com suporte a cache em localStorage.
+ * Serviço assíncrono de busca com suporte a cache em localStorage com expiração (TTL).
  * 
  * @param {string} url - URL base da API
  * @param {string} dados - Parâmetro adicional (ex: CEP ou query)
@@ -36,10 +49,11 @@ function identificarServico(url) {
 async function buscarServicos(url, dados = "", forma = "") {
     const formataURL = `${url}${dados}${forma}`;
     const nomeServico = identificarServico(formataURL);
+    const ttl = obterTtlServico(formataURL);
     const inicio = performance.now();
 
-    // 1. Caso o dado já exista no cache (localStorage)
-    if (storage.existe(formataURL)) {
+    // 1. Caso o dado já exista no cache e não esteja expirado
+    if (storage.existe(formataURL, ttl)) {
         const dadosLocais = storage.buscarDadosLocal(formataURL);
         const duracao = (performance.now() - inicio).toFixed(2);
         console.log(`📦 [CACHE] ${nomeServico}: ${duracao}ms`);
