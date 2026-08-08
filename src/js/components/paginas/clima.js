@@ -380,39 +380,43 @@ async function consultarCepEClima() {
  */
 async function telaClima(app) {
     const formulario = `
-        <section class="bem-page-header" id="clima-container">
-            <h1 class="bem-page-header__title">Dashboard de Clima em Tempo Real & Previsão 7 Dias</h1>
-            <p class="bem-page-header__subtitle bem-mb-lg">
-                Digite um CEP para explorar a previsão completa da sua cidade com mapa minimalista light e detalhes do sol.
-            </p>
-            <form id="form-consulta-cep" class="bem-form bem-card--white-glass bem-form--centered">
-                <div class="bem-form__group">
-                    <label for="cep" class="bem-form__label bem-form__label--required">CEP</label>
-                    <input type="text" id="cep" class="bem-form__input" placeholder="Ex: 01001000" maxlength="9" required>
-                    <button type="button" id="btn-buscar-cep" class="bem-btn bem-btn--primary bem-btn--search-cep">Buscar</button>
-                </div>
-                <div class="bem-grid bem-grid-auto bem-mt-md">
+        <div class="bem-clima-page" id="clima-container">
+            <section class="bem-page-header">
+                <h1 class="bem-page-header__title">Dashboard de Clima em Tempo Real & Previsão 7 Dias</h1>
+                <p class="bem-page-header__subtitle bem-mb-lg">
+                    Digite um CEP para explorar a previsão completa da sua cidade com mapa minimalista light e detalhes do sol.
+                </p>
+                <form id="form-consulta-cep" class="bem-form bem-card--white-glass bem-form--centered bem-clima-form">
                     <div class="bem-form__group">
-                        <label for="logradouro" class="bem-form__label">Logradouro</label>
-                        <input type="text" id="logradouro" class="bem-form__input" readonly>
+                        <label for="cep" class="bem-form__label bem-form__label--required">CEP</label>
+                        <div class="bem-clima-input-wrap">
+                            <input type="text" id="cep" class="bem-form__input" placeholder="Ex: 01001000" maxlength="9" required>
+                            <button type="button" id="btn-buscar-cep" class="bem-btn bem-btn--primary bem-btn--search-cep">Buscar</button>
+                        </div>
                     </div>
-                    <div class="bem-form__group">
-                        <label for="bairro" class="bem-form__label">Bairro</label>
-                        <input type="text" id="bairro" class="bem-form__input" readonly>
+                    <div class="bem-grid bem-grid-auto bem-mt-md">
+                        <div class="bem-form__group">
+                            <label for="logradouro" class="bem-form__label">Logradouro</label>
+                            <input type="text" id="logradouro" class="bem-form__input" readonly>
+                        </div>
+                        <div class="bem-form__group">
+                            <label for="bairro" class="bem-form__label">Bairro</label>
+                            <input type="text" id="bairro" class="bem-form__input" readonly>
+                        </div>
+                        <div class="bem-form__group">
+                            <label for="localidade" class="bem-form__label">Cidade</label>
+                            <input type="text" id="localidade" class="bem-form__input" readonly>
+                        </div>
+                        <div class="bem-form__group">
+                            <label for="estado" class="bem-form__label">Estado</label>
+                            <input type="text" id="estado" class="bem-form__input" readonly>
+                        </div>
                     </div>
-                    <div class="bem-form__group">
-                        <label for="localidade" class="bem-form__label">Cidade</label>
-                        <input type="text" id="localidade" class="bem-form__input" readonly>
-                    </div>
-                    <div class="bem-form__group">
-                        <label for="estado" class="bem-form__label">Estado</label>
-                        <input type="text" id="estado" class="bem-form__input" readonly>
-                    </div>
-                </div>
-            </form>
-            <div id="status-clima"></div>
-            <div id="resultado-clima"></div>
-        </section>
+                </form>
+                <div id="status-clima"></div>
+                <div id="resultado-clima"></div>
+            </section>
+        </div>
     `;
     app.innerHTML = formulario;
 

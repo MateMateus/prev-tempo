@@ -726,4 +726,77 @@ html, body {
     width: 100% !important;
     max-width: 100% !important;
   }
+
+  /* Container Específico Mobile da Consulta CEP (#clima-container) */
+  .bem-clima-page,
+  #clima-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .bem-clima-input-wrap {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+  }
+
+  .bem-clima-input-wrap .bem-form__input {
+    width: 100% !important;
+    text-align: center !important;
+    font-size: 1.05rem !important;
+    padding: 0.85rem !important;
+    border-radius: 12px !important;
+  }
+
+  .bem-clima-input-wrap .bem-btn--search-cep,
+  #clima-container .bem-btn--search-cep {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0.85rem !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+  }
+
+  #clima-container .bem-clima-form,
+  #clima-container .bem-form--centered {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1.25rem 1rem !important;
+    margin: 0 0 1.25rem 0 !important;
+    border-radius: 20px !important;
+  }
+}
+
+/* ==========================================================================
+   CONTAINER BASE DA PÁGINA CONSULTA CEP
+   ========================================================================== */
+.bem-clima-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+.bem-clima-input-wrap {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  align-items: center;
+}
+
+.bem-clima-input-wrap .bem-form__input {
+  flex: 1;
+}
+
+.bem-clima-input-wrap .bem-btn--search-cep {
+  margin-top: 0;
+  width: auto;
 }
