@@ -296,15 +296,11 @@ async function consultarCepEClima() {
         return;
     }
 
-<<<<<<< HEAD
     if (buscaEmAndamento) return;
     if (valorCep === ultimoCepConsultado && containerResultado.children.length > 0) return;
 
     buscaEmAndamento = true;
 
-=======
-    // 1. Exibe o feedback visual de "Carregando..." no containerStatus com spinner animado
->>>>>>> 56ce5430f479bef5650157c2334a1a15806770db
     containerStatus.innerHTML = `
         <div class="bem-alert bem-alert--info bem-mt-md bem-animate-fade-in bem-flex bem-items-center bem-gap-md">
             <span class="bem-spinner bem-spinner--primary"></span>
@@ -338,13 +334,9 @@ async function consultarCepEClima() {
         document.getElementById("localidade").value = dadosEndereco.localidade || "";
         document.getElementById("estado").value = dadosEndereco.estado || "";
 
-<<<<<<< HEAD
-=======
-        // Salva o último CEP consultado no localStorage
+        ultimoCepConsultado = valorCep;
         localStorage.setItem("prevtempo_ultimo_cep", valorCep);
 
-        // 4. Utiliza a cidade retornada pelo ViaCEP para obter as coordenadas de Latitude e Longitude
->>>>>>> 56ce5430f479bef5650157c2334a1a15806770db
         const cidade = dadosEndereco.localidade;
         const estadoSigla = dadosEndereco.uf || "";
         const bairro = dadosEndereco.bairro || "";
