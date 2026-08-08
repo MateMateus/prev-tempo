@@ -1,10 +1,15 @@
 // Importa a função que gera o menu de navegação dinâmico (Navbar)
 import navbar from "./components/navbar/navbar.js";
+// Importa o componente de rodapé (Footer)
+import footer from "./components/footer/footer.js";
 // Importa a lista de rotas da aplicação (mapeamento de URLs e funções de página)
 import roteador from "./components/rotas/rotas.js";
 
 // Inicializa a barra de navegação injetando as rotas cadastradas
 navbar(roteador);
+
+// Inicializa o rodapé global
+footer(document.getElementById('footer'));
 
 // Captura a div de montagem principal da SPA (Single Page Application)
 const app = document.getElementById('app');
@@ -32,6 +37,7 @@ window.addEventListener("hashchange", () => {
 
 // Definição da rota de fallback para páginas não encontradas (Erro 404)
 const rota404 = { 
+    titulo: 'PrevTempo - Página Não Encontrada (404)',
     pagina: (container) => {
         container.innerHTML = `
             <div class="bem-container bem-text-center bem-pt-xl">
@@ -44,8 +50,17 @@ const rota404 = {
 
 // Função responsável por renderizar a página correspondente à rota atual
 async function render() {
+    // Normaliza a hash removendo possíveis query params se houver
+    const hashLimpo = hash.split('?')[0];
+
     // Busca a rota no mapa pelo hash atual; se não existir, utiliza a 'rota404'
-    const rotaAtual = mapaDeRotas[hash] || rota404;
+    const rotaAtual = mapaDeRotas[hashLimpo] || mapaDeRotas[hash] || rota404;
+
+    // Atualiza dinamicamente o título do documento (aba do navegador)
+    if (rotaAtual.titulo) {
+        document.title = rotaAtual.titulo;
+    }
+
     // Executa a função da página passando o elemento container 'app'
     await rotaAtual.pagina(app);
 }

@@ -296,14 +296,18 @@ async function consultarCepEClima() {
         return;
     }
 
+<<<<<<< HEAD
     if (buscaEmAndamento) return;
     if (valorCep === ultimoCepConsultado && containerResultado.children.length > 0) return;
 
     buscaEmAndamento = true;
 
+=======
+    // 1. Exibe o feedback visual de "Carregando..." no containerStatus com spinner animado
+>>>>>>> 56ce5430f479bef5650157c2334a1a15806770db
     containerStatus.innerHTML = `
-        <div class="bem-alert bem-alert--info bem-mt-md bem-animate-fade-in">
-            <span class="bem-alert__icon">⏳</span>
+        <div class="bem-alert bem-alert--info bem-mt-md bem-animate-fade-in bem-flex bem-items-center bem-gap-md">
+            <span class="bem-spinner bem-spinner--primary"></span>
             <div class="bem-alert__content">
                 <div class="bem-alert__title">Carregando...</div>
                 <div class="bem-alert__message">Buscando endereço, coordenadas e previsão de 7 dias...</div>
@@ -316,11 +320,13 @@ async function consultarCepEClima() {
         const dadosEndereco = await buscarServicos("https://viacep.com.br/ws/", valorCep, "/json/");
         if (!dadosEndereco || dadosEndereco.erro) {
             containerResultado.innerHTML = `
-                <div class="bem-alert bem-alert--danger bem-mt-md">
-                    <span class="bem-alert__icon">❌</span>
-                    <div class="bem-alert__content">
-                        <div class="bem-alert__title">CEP não encontrado</div>
-                        <div class="bem-alert__message">Não encontramos informações para o CEP informado.</div>
+                <div class="bem-card bem-card--flat bem-p-lg bem-mt-md bem-border-danger bem-animate-fade-in">
+                    <div class="bem-flex bem-items-center bem-gap-md">
+                        <span class="bem-text-2xl">🔍❌</span>
+                        <div>
+                            <h3 class="bem-text-danger bem-mb-xs">CEP não encontrado</h3>
+                            <p class="bem-text-muted-util">Não encontramos informações para o CEP <strong>${valorCep}</strong>. Verifique se os números foram digitados corretamente.</p>
+                        </div>
                     </div>
                 </div>
             `;
@@ -332,6 +338,13 @@ async function consultarCepEClima() {
         document.getElementById("localidade").value = dadosEndereco.localidade || "";
         document.getElementById("estado").value = dadosEndereco.estado || "";
 
+<<<<<<< HEAD
+=======
+        // Salva o último CEP consultado no localStorage
+        localStorage.setItem("prevtempo_ultimo_cep", valorCep);
+
+        // 4. Utiliza a cidade retornada pelo ViaCEP para obter as coordenadas de Latitude e Longitude
+>>>>>>> 56ce5430f479bef5650157c2334a1a15806770db
         const cidade = dadosEndereco.localidade;
         const estadoSigla = dadosEndereco.uf || "";
         const bairro = dadosEndereco.bairro || "";
@@ -377,11 +390,13 @@ async function consultarCepEClima() {
     } catch (error) {
         console.error("Erro no fluxo de consulta por CEP:", error);
         containerResultado.innerHTML = `
-            <div class="bem-alert bem-alert--danger bem-mt-md">
-                <span class="bem-alert__icon">🚨</span>
-                <div class="bem-alert__content">
-                    <div class="bem-alert__title">Erro Inesperado</div>
-                    <div class="bem-alert__message">Ocorreu um erro ao processar sua solicitação. Tente novamente.</div>
+            <div class="bem-card bem-card--flat bem-p-lg bem-mt-md bem-border-danger bem-animate-fade-in">
+                <div class="bem-flex bem-items-center bem-gap-md">
+                    <span class="bem-text-2xl">🌐⚠️</span>
+                    <div>
+                        <h3 class="bem-text-danger bem-mb-xs">Falha na conexão com os serviços</h3>
+                        <p class="bem-text-muted-util">Não foi possível obter a previsão do tempo no momento. Verifique sua conexão de internet ou tente novamente em instantes.</p>
+                    </div>
                 </div>
             </div>
         `;
@@ -389,6 +404,115 @@ async function consultarCepEClima() {
         buscaEmAndamento = false;
         containerStatus.innerHTML = "";
     }
+}
+
+/**
+/**
+ * Função para buscar o clima atual utilizando a API nativa de Geolocalização do navegador.
+ */
+async function consultarClimaPorGeolocalizacao() {
+    const containerStatus = document.getElementById("status-clima");
+    const containerResultado = document.getElementById("resultado-clima");
+    if (!containerStatus || !containerResultado) return;
+
+    if (!navigator.geolocation) {
+        containerResultado.innerHTML = `
+            <div class="bem-alert bem-alert--warning bem-mt-md">
+                <span class="bem-alert__icon">⚠️</span>
+                <div class="bem-alert__content">
+                    <div class="bem-alert__title">Geolocalização indisponível</div>
+                    <div class="bem-alert__message">Seu navegador não suporta geolocalização.</div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    containerStatus.innerHTML = `
+        <div class="bem-alert bem-alert--info bem-mt-md bem-animate-fade-in">
+            <span class="bem-alert__icon">⏳</span>
+            <div class="bem-alert__content">
+                <div class="bem-alert__title">Obtendo localização...</div>
+                <div class="bem-alert__message">Aguardando permissão de GPS para identificar sua posição...</div>
+            </div>
+        </div>
+    `;
+    containerResultado.innerHTML = "";
+
+    navigator.geolocation.getCurrentPosition(async (posicao) => {
+        const { latitude, longitude } = posicao.coords;
+        try {
+            const climaData = await buscarClimaPorCoordenadas(latitude, longitude);
+            if (!climaData || !climaData.current) throw new Error("Falha ao buscar dados climáticos");
+
+            const atual = climaData.current;
+            const diario = climaData.daily;
+            const infoCondicao = traduzirCodigoTempo(atual.weather_code);
+
+            containerResultado.innerHTML = `
+                <div class="bem-card bem-mt-lg bem-animate-slide-up">
+                    <div class="bem-card__header bem-flex bem-justify-between bem-items-center">
+                        <div>
+                            <h2 class="bem-card__title">Sua Localização Atual 📍</h2>
+                            <span class="bem-card__subtitle">Coordenadas: ${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°</span>
+                        </div>
+                        <div class="bem-text-2xl">${infoCondicao.icone}</div>
+                    </div>
+                    <div class="bem-card__body">
+                        <div class="bem-grid bem-grid-auto">
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Temperatura Atual</span>
+                                <div class="bem-text-2xl bem-font-bold bem-text-primary">${atual.temperature_2m}°C</div>
+                            </div>
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Sensação Térmica</span>
+                                <div class="bem-text-2xl bem-font-bold">${atual.apparent_temperature}°C</div>
+                            </div>
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Condição do Tempo</span>
+                                <div class="bem-font-medium">${infoCondicao.descricao}</div>
+                            </div>
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Umidade do Ar</span>
+                                <div class="bem-font-medium">${atual.relative_humidity_2m}%</div>
+                            </div>
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Velocidade do Vento</span>
+                                <div class="bem-font-medium">${atual.wind_speed_10m} km/h</div>
+                            </div>
+                            <div class="bem-card bem-card--flat bem-p-md bem-text-center">
+                                <span class="bem-text-muted-util bem-text-sm">Máx / Mín do Dia</span>
+                                <div class="bem-font-medium">${diario.temperature_2m_max[0]}°C / ${diario.temperature_2m_min[0]}°C</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            containerResultado.innerHTML = `
+                <div class="bem-alert bem-alert--danger bem-mt-md">
+                    <span class="bem-alert__icon">❌</span>
+                    <div class="bem-alert__content">
+                        <div class="bem-alert__title">Erro no Clima Local</div>
+                        <div class="bem-alert__message">Não foi possível consultar os dados de clima da sua localização.</div>
+                    </div>
+                </div>
+            `;
+        } finally {
+            containerStatus.innerHTML = "";
+        }
+    }, (erro) => {
+        containerStatus.innerHTML = "";
+        containerResultado.innerHTML = `
+            <div class="bem-alert bem-alert--warning bem-mt-md">
+                <span class="bem-alert__icon">⚠️</span>
+                <div class="bem-alert__content">
+                    <div class="bem-alert__title">Permissão Negada</div>
+                    <div class="bem-alert__message">Não foi possível acessar a localização. Verifique as permissões do seu navegador.</div>
+                </div>
+            </div>
+        `;
+    });
 }
 
 /**
@@ -440,6 +564,7 @@ async function telaClima(app) {
 
     const formCep = document.getElementById("form-consulta-cep");
     const campoCep = document.getElementById("cep");
+    const btnGeo = document.getElementById("btn-geo");
 
     if (campoCep) {
         // Máscara dinâmica de CEP: 00000-000
@@ -467,6 +592,16 @@ async function telaClima(app) {
             e.preventDefault();
             consultarCepEClima();
         });
+    }
+    if (btnGeo) {
+        btnGeo.addEventListener("click", consultarClimaPorGeolocalizacao);
+    }
+
+    // Carrega automaticamente a última busca armazenada no localStorage se existir
+    const ultimoCepSalvo = localStorage.getItem("prevtempo_ultimo_cep");
+    if (ultimoCepSalvo && campoCep) {
+        campoCep.value = ultimoCepSalvo;
+        consultarCepEClima();
     }
 }
 
